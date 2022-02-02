@@ -1,0 +1,89 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Compiler Cool Project</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Karla"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+<div><pre><span class="line-number">1</span><span class="comments">// Main class
+</span></pre></div>
+<div><pre><span class="line-number">2</span><span class="reserved-keywords">class</span> <span class="identifiers">Main</span><span class="operators-and-punctuations">{</span>
+</pre></div>
+<div><pre><span class="line-number">3</span>	<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span><span class="operators-and-punctuations">[</span><span class="operators-and-punctuations">]</span> <span class="identifiers">items</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">4</span>	<span class="reserved-keywords">void</span> <span class="identifiers">printArray</span><span class="operators-and-punctuations">(</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">{</span>
+</pre></div>
+<div><pre><span class="line-number">5</span>		<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span> <span class="identifiers">i</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">6</span>		<span class="reserved-keywords">for</span> <span class="operators-and-punctuations">(</span><span class="identifiers">i</span><span class="operators-and-punctuations">=</span><span class="integer-numbers">0</span><span class="operators-and-punctuations">;</span><span class="identifiers">i</span><span class="operators-and-punctuations"><</span><span class="integer-numbers">100</span><span class="operators-and-punctuations">;</span><span class="identifiers">i</span><span class="operators-and-punctuations">++</span><span class="operators-and-punctuations">)</span>
+</pre></div>
+<div><pre><span class="line-number">7</span>			<span class="reserved-keywords">print</span><span class="operators-and-punctuations">(</span><span class="identifiers">items</span><span class="operators-and-punctuations">[</span><span class="identifiers">i</span><span class="operators-and-punctuations">]</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">8</span>		<span class="reserved-keywords">rof</span>
+</pre></div>
+<div><pre><span class="line-number">9</span>	<span class="operators-and-punctuations">}</span>
+</pre></div>
+<div><pre><span class="line-number">10</span>
+</pre></div>
+<div><pre><span class="line-number">11</span><span class="reserved-keywords">int</span> <span class="identifiers">main</span><span class="operators-and-punctuations">(</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">{</span>
+</pre></div>
+<div><pre><span class="line-number">12</span>	<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span> <span class="identifiers">i</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">13</span>	<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span> <span class="identifiers">j</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">14</span>	<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span><span class="operators-and-punctuations">[</span><span class="operators-and-punctuations">]</span> <span class="identifiers">rawItems</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">15</span>	<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span> <span class="identifiers">arrayLenInHex</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">16</span>	<span class="identifiers">arrayLenInHex</span> <span class="operators-and-punctuations">=</span> <span class="integer-numbers">0x</span><span class="integer-numbers">64</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">17</span>	<span class="identifiers">rawItems</span> <span class="operators-and-punctuations">=</span> <span class="reserved-keywords">new</span> <span class="reserved-keywords">Array</span> <span class="operators-and-punctuations">(</span><span class="reserved-keywords">int</span><span class="operators-and-punctuations">,</span> <span class="identifiers">arrayLenInHex</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">18</span>	<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span> <span class="identifiers">dummyScientificNumber</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">19</span>	<span class="identifiers">dummyScientificNumber</span> <span class="operators-and-punctuations">=</span> <span class="real-numbers">10.2E+2</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">20</span>
+</pre></div>
+<div><pre><span class="line-number">21</span>	<span class="reserved-keywords">print</span><span class="operators-and-punctuations">(</span><span class="strings">"</span><span class="strings">Please enter random numbers!</span><span class="special-characters">\t</span><span class="strings">We just print them!</span><span class="strings">"</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">22</span>	<span class="reserved-keywords">print</span><span class="operators-and-punctuations">(</span><span class="strings">"</span><span class="strings">Max numbers counter: 100, </span><span class="special-characters">\n</span><span class="strings">(Enter </span><span class="special-characters">\"</span><span class="strings">-1</span><span class="special-characters">\"</span><span class="strings">to end sooner.)</span><span class="strings">"</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">23</span>	<span class="reserved-keywords">for</span><span class="operators-and-punctuations">(</span><span class="identifiers">i</span><span class="operators-and-punctuations">=</span><span class="integer-numbers">0</span><span class="operators-and-punctuations">;</span> <span class="identifiers">i</span><span class="operators-and-punctuations"><</span><span class="identifiers">arrayLenInHex</span><span class="operators-and-punctuations">;</span> <span class="identifiers">i</span> <span class="operators-and-punctuations">=</span> <span class="identifiers">i</span><span class="operators-and-punctuations">+</span><span class="integer-numbers">1</span><span class="operators-and-punctuations">)</span>
+</pre></div>
+<div><pre><span class="line-number">24</span>		<span class="reserved-keywords">let</span> <span class="reserved-keywords">int</span> <span class="identifiers">x</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">25</span>		<span class="identifiers">x</span> <span class="operators-and-punctuations">=</span> <span class="reserved-keywords">in_int</span><span class="operators-and-punctuations">(</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">26</span>		<span class="reserved-keywords">if</span><span class="operators-and-punctuations">(</span><span class="identifiers">x</span><span class="operators-and-punctuations">==</span><span class="operators-and-punctuations">-</span><span class="integer-numbers">1</span><span class="operators-and-punctuations">)</span> <span class="reserved-keywords">then</span>
+</pre></div>
+<div><pre><span class="line-number">27</span>			<span class="reserved-keywords">break</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">28</span>		<span class="reserved-keywords">else</span>
+</pre></div>
+<div><pre><span class="line-number">29</span>			<span class="identifiers">rawItems</span><span class="operators-and-punctuations">[</span><span class="identifiers">i</span><span class="operators-and-punctuations">]</span><span class="operators-and-punctuations">=</span><span class="identifiers">x</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">30</span>		<span class="reserved-keywords">fi</span>
+</pre></div>
+<div><pre><span class="line-number">31</span>	<span class="reserved-keywords">rof</span>
+</pre></div>
+<div><pre><span class="line-number">32</span>	<span class="identifiers">printArray</span><span class="operators-and-punctuations">(</span><span class="operators-and-punctuations">)</span><span class="operators-and-punctuations">;</span>
+</pre></div>
+<div><pre><span class="line-number">33</span>
+</pre></div>
+<div><pre><span class="line-number">34</span>	<span class="comments">//undefined Token
+</span></pre></div>
+<div><pre><span class="line-number">35</span>	<span class="undefined-token">\</span>
+</pre></div>
+<div><pre><span class="line-number">36</span>	
+</pre></div>
+<div><pre><span class="line-number">37</span>     <span class="operators-and-punctuations">}</span>
+</pre></div>
+<div><pre><span class="line-number">38</span><span class="operators-and-punctuations">}</span></pre></div>
+  </body>
+</html>

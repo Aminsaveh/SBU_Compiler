@@ -1,0 +1,3 @@
+Error happened while parsing ...
+At node 27: current token is let but except: [id, }, int, real, string, bool, void]
+java.lang.RuntimeException: Unable to parse input.

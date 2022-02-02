@@ -1,0 +1,15 @@
+package com.compiler;
+public enum Type {
+    STRING,
+    COMMENT,
+    RESERVED_KEYWORD,
+    OPERATORS_AND_PUNCTUATION,
+    IDENTIFIERS,
+    INTEGER_NUMBER,
+    REAL_NUMBER,
+    HEX,
+    SCIENTIFIC_NOTATION,
+    WHITESPACE,
+    UNDEFINED,
+    ESCAPE_CHAR,
+}

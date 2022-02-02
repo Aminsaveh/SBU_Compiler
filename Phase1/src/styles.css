@@ -1,0 +1,54 @@
+/* theme colors */
+:root {
+  --bg-color: #222222;
+  --reserved-keywords: #fc618d;
+  --identifiers: #ffffff;
+  --integer-numbers: #f59762;
+  --real-numbers: #f59762;
+  --strings: #fce566;
+  --special-characters: #ee82ee;
+  --comments: #69676c;
+  --operators-and-punctuations: #00ffff;
+  --undefined-token: #ff0000;
+}
+body {
+  margin: 0px;
+  padding: 20px;
+  background-color: var(--bg-color);
+  font-family: "Karla";
+}
+.identifiers {
+  color: var(--identifiers);
+}
+.operators-and-punctuations {
+  color: var(--operators-and-punctuations) !important;
+}
+.reserved-keywords {
+  color: var(--reserved-keywords);
+}
+
+.strings {
+  color: var(--strings);
+}
+.comments {
+  color: var(--comments);
+}
+.undefined-token {
+  color: var(--undefined-token);
+}
+.real-numbers {
+  color: var(--real-numbers);
+  font-style: italic;
+}
+.integer-numbers {
+  color: var(--integer-numbers);
+
+}
+.line-number {
+  width: 30px;
+  display: inline-block;
+  color: var(--comments);
+}
+.special-characters {
+  color: var(--special-characters);
+}
