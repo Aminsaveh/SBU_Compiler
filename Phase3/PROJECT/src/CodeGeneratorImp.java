@@ -128,6 +128,14 @@ public class CodeGeneratorImp implements CodeGenerator {
                 case "StartForCondition" :
                     startForCondition();
                     break;
+                case "ForJumpZero":
+                    compileFor();
+                    break;
+                case "CompleteFor":
+                    completeFor();
+                    stepForStatement();
+                    completeStepOfFor();
+                    break;
 
             }
 
