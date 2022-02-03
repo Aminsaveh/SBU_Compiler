@@ -105,6 +105,19 @@ main:
 		sw $t1, 0($t0)
 		# t7 is just for debugging 
 		lw $t7, a
+		# binary Convert expression of a 
+		la $t0, a
+		lw $t0, 0($t0)
+		mtc1 $t0, $f0
+		cvt.s.w $f1, $f0
+		s.s $f1, a
+		# assignment b = a 
+		la $t0, b
+		la $t1, a
+		lw $t1, 0($t1)
+		sw $t1, 0($t0)
+		# t7 is just for debugging 
+		lw $t7, b
 .data
 		nl: .asciiz "\n"
 		strbuffer: .space 20

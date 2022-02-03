@@ -20,9 +20,10 @@ class Main {
 	d = b-- ;
 	a += b ;
 	c *= d;
-	
+	b = (real)a;
 	}
 
 }
+
 
 

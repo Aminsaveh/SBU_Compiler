@@ -1,7 +1,5 @@
 
 
-import sun.security.krb5.internal.crypto.Des;
-
 import java.util.Stack;
 
 public class CodeGeneratorImp implements CodeGenerator {
@@ -126,6 +124,9 @@ public class CodeGeneratorImp implements CodeGenerator {
                     break;
                 case "Cast":
                     Cast();
+                    break;
+                case "StartForCondition" :
+                    startForCondition();
                     break;
 
             }
@@ -284,7 +285,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToCode("la", "$t0", firstOperandDes.name);
         AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
 
-        AssemblyWriter.appendCommandToCode(operationCommand, "$t0", "$t0", "0x1");
+        AssemblyWriter.appendCommandToCode("++", "$t0", "$t0", "0x1");
         AssemblyWriter.appendCommandToData(variableName, "word", "0");
         AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
         AssemblyWriter.appendDebugLine(variableName);
@@ -487,7 +488,7 @@ public class CodeGeneratorImp implements CodeGenerator {
             case "int":
                 res = Type.INTEGER_NUMBER;
                 break;
-            case "double":
+            case "real":
                 res = Type.REAL_NUMBER;
                 break;
             case "string":
