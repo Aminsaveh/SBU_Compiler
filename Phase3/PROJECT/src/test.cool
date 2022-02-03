@@ -1,6 +1,8 @@
 class Main {
 
-	let int a;	
+	let int a;
+	let int c;
+	let int d;
 	let string b;
 
 
@@ -9,6 +11,15 @@ class Main {
 	a = in_int();
 	b = in_string();
 	print(a);
+	c = b;
+	d = b;
+	a = b * c;
+	a = b / c;
+	a = b - c;
+	c = a++ ;
+	d = b-- ;
+	a += b ;
+	c *= d;
 	
 	}
 

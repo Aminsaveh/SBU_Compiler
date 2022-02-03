@@ -1,11 +1,13 @@
+
+
 import java.util.Stack;
 
 public class CodeGeneratorImp implements CodeGenerator {
-    private static Stack<Object> semanticStack = new Stack<>();
-    private static Stack<SymbolTable> symbolTableLocalStack = new Stack<>();
-    private static Stack<SymbolTable> symbolTableGlobalStack = new Stack<>();
-    private static int variableCount = 0;
-    private CoolScanner scanner;
+    public static Stack<Object> semanticStack = new Stack<>();
+    public static Stack<SymbolTable> symbolTableLocalStack = new Stack<>();
+    public static Stack<SymbolTable> symbolTableGlobalStack = new Stack<>();
+    public static int variableCount = 0;
+    public CoolScanner scanner;
     CodeGeneratorImp(CoolScanner scanner){
         this.scanner = scanner;
     }
@@ -58,7 +60,68 @@ public class CodeGeneratorImp implements CodeGenerator {
                 case "pushGlobalIdDcl":
                      PushGlobalIdDcl(scanner.currentSymbol.getToken());
                      break;
-                     case ""
+                case "OR" :
+                case "LogicalOR":
+                    ORComputation();
+                    break;
+                case "XOR":
+                    XORComputation();
+                    break;
+                case "AND":
+                case "LogicalAND":
+                    ANDComputation();
+                    break;
+                case "NOT":
+                    NOTComputation();
+                    break;
+                case "Bigger":
+                    BiggerComputation();
+                    break;
+                case "BiggerEqual":
+                    BiggerEqualComputation();
+                    break;
+                case "Smaller":
+                    SmallerComputation();
+                    break;
+                case "SmallerEqual":
+                    SmallerEqualComputation();
+                    break;
+                case "NotEqual":
+                    NotEqualComputation();
+                    break;
+                case "Equal":
+                    EqualComputation();
+                    break;
+                case "Add":
+                    AddComputation();
+                    break;
+                case "Sub":
+                    SubComputation();
+                    break;
+                case "Mult":
+                    MultComputation();
+                    break;
+                case "Divide":
+                    DivideComputation();
+                    break;
+                case "PlusPlus":
+                    PlusPlusComputation();
+                    break;
+                case "MinusMinus":
+                    MinusMinusComputation();
+                    break;
+                case "AddAssign" :
+                    AddAssignComputation();
+                    break;
+                case "SubAssign":
+                    SubAssignComputation();
+                    break;
+                case "MultAssign":
+                    MultAssignComputation();
+                    break;
+                case "DivideAssign":
+                    DivideAssignComputation();
+                    break;
 
             }
 
@@ -412,7 +475,6 @@ public class CodeGeneratorImp implements CodeGenerator {
         System.out.println("PushMethod : " + methodId);
     }
 
-
     Type StringToType(String type) {
         Type res;
         switch (type) {
@@ -433,8 +495,156 @@ public class CodeGeneratorImp implements CodeGenerator {
     }
 
 
+    public void ORComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("OR Computation");
+        Computations.Operate(firstOperand,secondOperand,"OR");
+    }
 
-    public String GenerateVariable(){
+    public void XORComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("XOR Computation");
+        Computations.Operate(firstOperand,secondOperand,"XOR");
+    }
+
+    public void ANDComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("AND Computation");
+        Computations.Operate(firstOperand,secondOperand,"AND");
+    }
+
+    public void BiggerComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Bigger Computation");
+        Computations.Operate(firstOperand,secondOperand,"Bigger");
+    }
+
+    public void SmallerComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Smaller Computation");
+        Computations.Operate(firstOperand,secondOperand,"Smaller");
+    }
+
+    public void SmallerEqualComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("SmallerEqual Computation");
+        Computations.Operate(firstOperand,secondOperand,"SmallerEqual");
+    }
+
+    public void BiggerEqualComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("BiggerEqual Computation");
+        Computations.Operate(firstOperand,secondOperand,"BiggerEqual");
+    }
+
+    public void EqualComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Equal Computation");
+        Computations.Operate(firstOperand,secondOperand,"Equal");
+    }
+
+    public void NotEqualComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("NotEqual Computation");
+        Computations.Operate(firstOperand,secondOperand,"NotEqual");
+    }
+
+    public void NOTComputation(){
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Not Computation");
+        Computations.Operate(firstOperand,firstOperand,"NOT");
+    }
+
+    public void PlusPlusComputation(){
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("PlusPlus Computation");
+        Computations.Operate(firstOperand,firstOperand,"PlusPlus");
+    }
+
+    public void MinusMinusComputation(){
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("MinusMinus Computation");
+        Computations.Operate(firstOperand,firstOperand,"MinusMinus");
+    }
+
+    public void AddComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Add Computation");
+        Computations.Operate(firstOperand,secondOperand,"Add");
+    }
+
+    public void SubComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Sub Computation");
+        Computations.Operate(firstOperand,secondOperand,"Sub");
+    }
+
+    public void MultComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Mult Computation");
+        Computations.Operate(firstOperand,secondOperand,"Mult");
+    }
+
+    public void DivideComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("Divide Computation");
+        Computations.Operate(firstOperand,secondOperand,"Divide");
+    }
+
+    public void AddAssignComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        semanticStack.push(firstOperand);
+        System.out.println("AddAssign Computation");
+        Computations.Operate(firstOperand,secondOperand,"Add");
+        Assignment();
+    }
+    public void SubAssignComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        semanticStack.push(firstOperand);
+        System.out.println("SubAssign Computation");
+        Computations.Operate(firstOperand,secondOperand,"Sub");
+        Assignment();
+    }
+    public void MultAssignComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        semanticStack.push(firstOperand);
+        System.out.println("MultAssign Computation");
+        Computations.Operate(firstOperand,secondOperand,"Mult");
+        Assignment();
+    }
+    public void DivideAssignComputation(){
+        Descriptor secondOperand = (Descriptor) semanticStack.pop();
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        semanticStack.push(firstOperand);
+        System.out.println("DivideAssign Computation");
+        Computations.Operate(firstOperand,secondOperand,"Divide");
+        Assignment();
+    }
+
+
+
+
+
+
+
+
+    public static String GenerateVariable(){
         variableCount++;
         return "var" + (variableCount);
     }
