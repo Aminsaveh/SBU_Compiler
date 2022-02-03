@@ -1,5 +1,7 @@
 
 
+import sun.security.krb5.internal.crypto.Des;
+
 import java.util.Stack;
 
 public class CodeGeneratorImp implements CodeGenerator {
@@ -121,6 +123,9 @@ public class CodeGeneratorImp implements CodeGenerator {
                     break;
                 case "DivideAssign":
                     DivideAssignComputation();
+                    break;
+                case "Cast":
+                    Cast();
                     break;
 
             }
@@ -637,7 +642,48 @@ public class CodeGeneratorImp implements CodeGenerator {
         Assignment();
     }
 
+    public void Cast(){
+        Descriptor des = (Descriptor) semanticStack.pop();
+        Type type = (Type) semanticStack.pop();
+        if (type == Type.INTEGER_NUMBER) {
+            RealToInt(des, type);
+        } else if (type == Type.REAL_NUMBER) {
+            IntToReal(des, type);
+        } else {
+            String srcType = des.type.toString();
+            String destType = type.toString();
+            //new CastError(srcType, destType).error();
+        }
+    }
 
+
+
+
+    public void RealToInt(Descriptor firstOperandDes, Type resultType){
+        AssemblyWriter.appendComment("binary " + "Convert" + " expression of " + firstOperandDes.name);
+        AssemblyWriter.appendCommandToCode("la", "$t0", firstOperandDes.name);
+        AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
+        AssemblyWriter.appendCommandToCode("mtc1", "$t0", "$f0");
+        AssemblyWriter.appendCommandToCode("cvt.w.s", "$f1", "$f0");
+//        AssemblyFileWriter.appendCommandToData(firstOperandDes.getName(), "word", "0");
+        AssemblyWriter.appendCommandToCode("s.s", "$f1", firstOperandDes.name);
+//        AssemblyFileWriter.appendDebugLine(firstOperandDes.getName());
+        semanticStack.push(new LocalVarDscp(firstOperandDes.name, resultType));
+        System.out.println("RealToInt");
+    }
+
+    public void IntToReal(Descriptor firstOperandDes, Type resultType){
+        AssemblyWriter.appendComment("binary " + "Convert" + " expression of " + firstOperandDes.name);
+        AssemblyWriter.appendCommandToCode("la", "$t0", firstOperandDes.name);
+        AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
+        AssemblyWriter.appendCommandToCode("mtc1", "$t0", "$f0");
+        AssemblyWriter.appendCommandToCode("cvt.s.w", "$f1", "$f0");
+//        AssemblyFileWriter.appendCommandToData(firstOperandDes.getName(), "word", "0");
+        AssemblyWriter.appendCommandToCode("s.s", "$f1", firstOperandDes.name);
+//        AssemblyFileWriter.appendDebugLine(firstOperandDes.getName());
+        semanticStack.push(new LocalVarDscp(firstOperandDes.name, resultType));
+        System.out.println("IntToReal");
+    }
 
 
 
