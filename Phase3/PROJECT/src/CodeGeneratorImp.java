@@ -43,15 +43,22 @@ public class CodeGeneratorImp implements CodeGenerator {
                 case "pushLocalTopType":
                     PushLocalTopType();
                     break;
-                case "AddLocalId":
+                case "AddLocalid":
                     AddLocalId();
                     break;
                 case "Assignment":
                     Assignment();
                     break;
-
-
-
+                case "pushMethod":
+                    PushMethod(scanner.currentSymbol.getToken());
+                    break;
+                case "pushIdDcl":
+                    PushIdDcl(scanner.currentSymbol.getToken());
+                    break;
+                case "pushGlobalIdDcl":
+                     PushGlobalIdDcl(scanner.currentSymbol.getToken());
+                     break;
+                     case ""
 
             }
 
@@ -61,6 +68,170 @@ public class CodeGeneratorImp implements CodeGenerator {
 
         }
     }
+
+    /* --------------------------- Begin: If Statement -------------------------- */
+    // Containers
+    public static String afterIfLabel;
+    public static String afterElseLabel;
+
+    // Methods
+    public void compileIf() {
+        Descriptor fooValueDescriptor = (Descriptor) semanticStack.pop();
+        afterIfLabel = generateNewLabel();
+        afterElseLabel = generateNewLabel();
+        AssemblyWriter.appendComment("if code for " + fooValueDescriptor);
+        AssemblyWriter.appendCommandToCode("la", "$t0", fooValueDescriptor.name);
+        AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t0)");
+        AssemblyWriter.appendCommandToCode("beqz", "$t1", afterIfLabel);
+    }
+    public static void completeIf() {
+        AssemblyWriter.appendComment("complete if code");
+        AssemblyWriter.appendCommandToCode("j", afterElseLabel);
+        AssemblyWriter.addLabel(afterIfLabel);
+        AssemblyWriter.addLabel(afterElseLabel);
+    }
+    public static void elseCode() {
+        AssemblyWriter.appendComment("else code");
+        AssemblyWriter.deleteLabel(afterIfLabel);
+        AssemblyWriter.addLabel(afterIfLabel);
+    }
+    public static void completeElse() {
+        AssemblyWriter.appendComment("complete else code");
+        AssemblyWriter.deleteLabel(afterElseLabel);
+        AssemblyWriter.addLabel(afterElseLabel);
+    }
+    // Comments
+    // case "if":
+    //     new If((Descriptor) SemanticStack.pop()).compile();
+    //     break;
+    // case "completeIf":
+    //     If.completeIf();
+    //     break;
+    // case "else":
+    //     If.elseCode();
+    //     break;
+    // case "completeElse":
+    //     If.completeElse();
+    //     break;
+    /* ---------------------------- End: If Statement --------------------------- */
+
+    /* ---------------------------- Begin: While Loop --------------------------- */
+
+    // Containers
+    public static String startOfConditionLabel;
+    public static String endOfWhileLabel;
+
+    // Methods
+    public void compile() {
+        Descriptor fooValueDescriptor = (Descriptor) semanticStack.pop();
+        AssemblyWriter.appendComment("while code for " + fooValueDescriptor);
+        AssemblyWriter.appendCommandToCode("la", "$t0", fooValueDescriptor.name);
+        AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t0)");
+        endOfWhileLabel = generateNewLabel();
+        AssemblyWriter.appendCommandToCode("beqz", "$t1", endOfWhileLabel);
+    }
+    public static void startCondition() {
+        startOfConditionLabel = generateNewLabel();
+        AssemblyWriter.appendComment("start condition of while");
+        AssemblyWriter.addLabel(startOfConditionLabel);
+    }
+
+    public static void completeWhile() {
+        AssemblyWriter.appendComment("end of while");
+        AssemblyWriter.appendCommandToCode("j", startOfConditionLabel);
+        AssemblyWriter.addLabel(endOfWhileLabel);
+    }
+    // Comments
+    // case "startConditionWhile":
+    //     While.startCondition();
+    //     break;
+    // case "whileJumpZero":
+    //     new While((Descriptor) SemanticStack.pop()).compile();
+    //     break;
+    // case "completeWhile":
+    //     While.completeWhile();
+    //     break;
+    /* ----------------------------- End: While Loop ---------------------------- */
+
+    /* ----------------------------- Begin: For Loop ---------------------------- */
+    // Containers
+    public static String startOfForConditionLabel;
+    public static String endOfForLabel;
+    public static String startOfStepLabel;
+
+    // Methods
+    public void compileFor() {
+        Descriptor fooDescriptor = (Descriptor) semanticStack.pop();
+        AssemblyWriter.appendComment("FOR code for " + fooDescriptor);
+        AssemblyWriter.appendCommandToCode("la", "$t0", fooDescriptor.name);
+        AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t0)");
+        endOfForLabel = generateNewLabel();
+        AssemblyWriter.appendCommandToCode("beqz", "$t1", endOfForLabel);
+    }
+
+    public static void startForCondition() {
+        startOfForConditionLabel = generateNewLabel();
+        AssemblyWriter.appendComment("start condition of for");
+        AssemblyWriter.addLabel(startOfForConditionLabel);
+    }
+
+    public static void completeFor() {
+        startOfStepLabel = generateNewLabel();
+        AssemblyWriter.appendComment("end of FOR");
+        AssemblyWriter.appendCommandToCode("j", startOfStepLabel);
+    }
+
+    public static void stepForStatement() {
+        AssemblyWriter.appendComment("step of FOR");
+        AssemblyWriter.addLabel(startOfStepLabel);
+    }
+
+    public static void completeStepOfFor() {
+        AssemblyWriter.appendComment("complete step of FOR");
+        AssemblyWriter.appendCommandToCode("j", startOfForConditionLabel);
+        AssemblyWriter.addLabel(endOfForLabel);
+    }
+    // Comments
+    // case "startConditionFor":
+    //     For.startCondition();
+    //     break;
+    // case "forJumpZero":
+    //     new For((Descriptor) SemanticStack.pop()).compile();
+    //     break;
+    // case "completeFor":
+    //     For.completeFor();
+    //     For.stepStatement();
+    //     For.completeStepOfFor();
+    //     break;
+    /* ------------------------------ End: For Loop ----------------------------- */
+
+    /* ---------------------------- Begin: Operations --------------------------- */
+
+    // Methods
+    public void PlusPlusCommand() {
+        Descriptor firstOperandDes = (Descriptor) semanticStack.pop();
+        String operationCommand = "++";
+        String variableName =  GenerateVariable();
+        AssemblyWriter.appendComment("binary " + "++" + " expression of " + firstOperandDes.name);
+        AssemblyWriter.appendCommandToCode("la", "$t0", firstOperandDes.name);
+        AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
+
+        AssemblyWriter.appendCommandToCode(operationCommand, "$t0", "$t0", "0x1");
+        AssemblyWriter.appendCommandToData(variableName, "word", "0");
+        AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
+        AssemblyWriter.appendDebugLine(variableName);
+        semanticStack.push(new LocalVarDscp(variableName,  Type.INTEGER_NUMBER));
+    }
+
+    // Comments
+    // case "plusPlus":
+    // firstOperand = (Descriptor) SemanticStack.pop();
+    // new PlusPlus(firstOperand).compile();
+    // System.out.println("code gen of plus plus");
+    // break;
+    /* ----------------------------- End: Operations ---------------------------- */
+
+
 
     public void ReadInt() {
         AssemblyWriter.appendComment("read integer");
@@ -72,6 +243,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToCode("la", "$t1", variableName);
         AssemblyWriter.appendCommandToCode("sw", "$t0", "0($t1)");
         AssemblyWriter.appendDebugLine(variableName);
+        System.out.println("Read Integer : " + variableName);
         semanticStack.push(new LocalVarDscp(variableName, Type.INTEGER_NUMBER));
     }
 
@@ -86,6 +258,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToData(variableName, "space", "20");
         AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
         semanticStack.push(new LocalVarDscp(variableName, Type.STRING));
+        System.out.println("Read String : " + variableName);
         AssemblyWriter.appendCommandToCode("syscall");
     }
 
@@ -112,15 +285,19 @@ public class CodeGeneratorImp implements CodeGenerator {
             AssemblyWriter.appendCommandToCode("la", "$a0", "nl");
             AssemblyWriter.appendCommandToCode("syscall");
         }
+
+        System.out.println("Print : " + var.name);
     }
 
     public void PushType(String typeStr){
         Type type = StringToType(typeStr);
         semanticStack.push(type);
+        System.out.println("PushType : " + type);
     }
 
     public void PushClassId(String classId){
         symbolTableGlobalStack.push(new SymbolTable(classId));
+        System.out.println("PushClassId : " + classId);
     }
 
     public void PushGlobalTopType(){
@@ -144,6 +321,7 @@ public class CodeGeneratorImp implements CodeGenerator {
     public void AddGlobalId(){
         String id = (String) semanticStack.pop();
         Type type = (Type) semanticStack.pop();
+        System.out.println("AddGlobalId :" + id + " " + type);
         SymbolTable top = symbolTableGlobalStack.pop();
         top.symbolTable.put(id,new LocalVarDscp(id,type));
         symbolTableGlobalStack.push(top);
@@ -151,34 +329,54 @@ public class CodeGeneratorImp implements CodeGenerator {
     public void AddLocalId(){
         String id = (String) semanticStack.pop();
         Type type = (Type) semanticStack.pop();
+        System.out.println("AddLocalId :" + id + " " + type);
         SymbolTable top = symbolTableLocalStack.pop();
         top.symbolTable.put(id,new LocalVarDscp(id,type));
         symbolTableLocalStack.push(top);
     }
 
     public void PushId(String id){
-        if(!symbolTableLocalStack.isEmpty()){
+        System.out.println("PushId : " + id);
+        boolean isLocal = false;
+        if(!symbolTableLocalStack.isEmpty()) {
             SymbolTable symbolTable = symbolTableLocalStack.pop();
-            if(symbolTable.symbolTable.containsKey(id)){
+            if (symbolTable.symbolTable.containsKey(id)) {
+                isLocal = true;
+                System.out.println("LocalVar Pushed");
                 semanticStack.push(symbolTable.symbolTable.get(id));
             }
-        }else{
-            if(!symbolTableGlobalStack.isEmpty()){
-                SymbolTable symbolTable = symbolTableLocalStack.pop();
-                if(symbolTable.symbolTable.containsKey(id)){
-                    semanticStack.push(symbolTable.symbolTable.get(id));
-                }
-            }
+            symbolTableLocalStack.push(symbolTable);
         }
+        if(!isLocal &&!symbolTableGlobalStack.isEmpty()){
+            SymbolTable top = symbolTableGlobalStack.pop();
+            if(top.symbolTable.containsKey(id)){
+                isLocal=true;
+                System.out.println("GlobalVar Pushed" );
+                semanticStack.push(top.symbolTable.get(id));
+            }
+            symbolTableGlobalStack.push(top);
+        }
+
+        if(!isLocal){
+            //todo error
+        }
+
+    }
+
+    public void PushIdDcl(String id){
+        //todo check in symboltables
+        semanticStack.add(id);
+    }
+    public void PushGlobalIdDcl(String id){
+        //todo check in symboltables
+        semanticStack.add(id);
     }
 
 
     public void Assignment(){
-        System.out.println("code gen of assignment");
         Descriptor rightSide = (Descriptor) semanticStack.pop();
         Descriptor leftSide = (Descriptor) semanticStack.pop();
-        System.out.println(rightSide.type);
-        System.out.println(leftSide.type);
+        System.out.println("Assignment " + leftSide.name + " = " + rightSide.name);
         AssemblyWriter.appendComment("assignment " + leftSide.name + " = " + rightSide.name);
         AssemblyWriter.appendCommandToCode("la", "$t0", leftSide.name);
         AssemblyWriter.appendCommandToCode("la", "$t1", rightSide.name);
@@ -209,6 +407,11 @@ public class CodeGeneratorImp implements CodeGenerator {
          */
     }
 
+    public void PushMethod(String methodId){
+        symbolTableLocalStack.push(new SymbolTable(methodId));
+        System.out.println("PushMethod : " + methodId);
+    }
+
 
     Type StringToType(String type) {
         Type res;
@@ -236,5 +439,11 @@ public class CodeGeneratorImp implements CodeGenerator {
         return "var" + (variableCount);
     }
 
+    // shitty methods will go here
+    private static int labelIndex = 0;
+    public static String generateNewLabel() {
+        ++labelIndex;
+        return "lbl" + labelIndex;
+    }
 }
 

@@ -1,0 +1,17 @@
+class Main {
+
+	let int a;	
+	let string b;
+
+
+	void main(){
+	let int a;
+	a = in_int();
+	b = in_string();
+	print(a);
+	
+	}
+
+}
+
+

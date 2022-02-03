@@ -1,23 +1,25 @@
 import java.io.*;
 
 public class Main {
-    public static void parseAndWriteOutput(Parser parser, String outputFilePath) throws IOException {
-        File myObj = new File(outputFilePath);
-        myObj.createNewFile();
-        FileWriter myWriter = new FileWriter(outputFilePath);
+    public static void parseAndWriteOutput(Parser parser) throws IOException {
+        //File myObj = new File(outputFilePath);
+        //myObj.createNewFile();
+        //FileWriter myWriter = new FileWriter(outputFilePath);
         try {
             parser.parse();
-            myWriter.write("Syntax is correct!");
-            myWriter.close();
+          //  myWriter.write("Syntax is correct!");
+          //  myWriter.close();
 
         } catch (Exception e) {
-            myWriter.write("Syntax is wrong!");
-            System.out.println(e.toString());
-            myWriter.close();
+         //   myWriter.write("Syntax is wrong!");
+         //   System.out.println(e.toString());
+         //   myWriter.close();
         }
     }
     public static void main(String[] args) throws IOException {
-        String inputCoolFilePath = "", outputFilePath = "", tablePath = "";
+        String inputCoolFilePath = "E:/Cool Compiler/Phase3/PROJECT/out/production/PROJECT/test.cool";
+        String tablePath = "E:/Cool Compiler/Phase3/table.npt";
+        /*
         if (args.length >= 6) {
             for (int i = 0; i < args.length; i++) {
                 if (args[i].equals("--input")) {
@@ -30,16 +32,21 @@ public class Main {
                     tablePath = args[i + 1];
                 }
             }
-            AssemblyWriter write = new AssemblyWriter("Cool Compiler/Phase3/PROJECT/src");
+         */
+            AssemblyWriter write = new AssemblyWriter("E:/Cool Compiler/Phase3/");
             CoolScanner scanner = new CoolScanner(new FileReader(inputCoolFilePath));
             CodeGeneratorImp cg = new CodeGeneratorImp(scanner);
             Parser parser = new Parser(scanner, cg, tablePath);
-            parseAndWriteOutput(parser, outputFilePath);
+            parseAndWriteOutput(parser);
             write.writeOutputFile();
+        /*
+        }
 
-        } else {
+        else {
             System.out.println("Run like bellow:\njava <javaClassFile> --input <inputCoolFilePath> --output <outputFilePath> --table <tablePath>");
             return;
         }
+
+         */
     }
 }
