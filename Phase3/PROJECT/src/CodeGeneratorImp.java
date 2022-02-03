@@ -125,7 +125,7 @@ public class CodeGeneratorImp implements CodeGenerator {
                 case "Cast":
                     Cast();
                     break;
-                case "StartForCondition" :
+                case "StartForCondition":
                     startForCondition();
                     break;
                 case "ForJumpZero":
@@ -136,7 +136,27 @@ public class CodeGeneratorImp implements CodeGenerator {
                     stepForStatement();
                     completeStepOfFor();
                     break;
-
+                case "StartWhileCondition":
+                    startWhileCondition();
+                    break;
+                case "WhileJumpZero":
+                    compileWhile();
+                    break;
+                case "CompleteWhile":
+                    completeWhile();
+                    break;
+                case "If":
+                    compileIf();
+                    break;
+                case "CompleteIf":
+                    completeIf();
+                    break;
+                case "Else":
+                    elseCode();
+                    break;
+                case "CompleteElse":
+                    completeElse();
+                    break;
             }
 
 
@@ -199,7 +219,7 @@ public class CodeGeneratorImp implements CodeGenerator {
     public static String endOfWhileLabel;
 
     // Methods
-    public void compile() {
+    public void compileWhile() {
         Descriptor fooValueDescriptor = (Descriptor) semanticStack.pop();
         AssemblyWriter.appendComment("while code for " + fooValueDescriptor);
         AssemblyWriter.appendCommandToCode("la", "$t0", fooValueDescriptor.name);
@@ -207,7 +227,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         endOfWhileLabel = generateNewLabel();
         AssemblyWriter.appendCommandToCode("beqz", "$t1", endOfWhileLabel);
     }
-    public static void startCondition() {
+    public static void startWhileCondition() {
         startOfConditionLabel = generateNewLabel();
         AssemblyWriter.appendComment("start condition of while");
         AssemblyWriter.addLabel(startOfConditionLabel);
@@ -218,16 +238,6 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToCode("j", startOfConditionLabel);
         AssemblyWriter.addLabel(endOfWhileLabel);
     }
-    // Comments
-    // case "startConditionWhile":
-    //     While.startCondition();
-    //     break;
-    // case "whileJumpZero":
-    //     new While((Descriptor) SemanticStack.pop()).compile();
-    //     break;
-    // case "completeWhile":
-    //     While.completeWhile();
-    //     break;
     /* ----------------------------- End: While Loop ---------------------------- */
 
     /* ----------------------------- Begin: For Loop ---------------------------- */
@@ -268,47 +278,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToCode("j", startOfForConditionLabel);
         AssemblyWriter.addLabel(endOfForLabel);
     }
-    // Comments
-    // case "startConditionFor":
-    //     For.startCondition();
-    //     break;
-    // case "forJumpZero":
-    //     new For((Descriptor) SemanticStack.pop()).compile();
-    //     break;
-    // case "completeFor":
-    //     For.completeFor();
-    //     For.stepStatement();
-    //     For.completeStepOfFor();
-    //     break;
     /* ------------------------------ End: For Loop ----------------------------- */
-
-    /* ---------------------------- Begin: Operations --------------------------- */
-
-    // Methods
-    public void PlusPlusCommand() {
-        Descriptor firstOperandDes = (Descriptor) semanticStack.pop();
-        String operationCommand = "++";
-        String variableName =  GenerateVariable();
-        AssemblyWriter.appendComment("binary " + "++" + " expression of " + firstOperandDes.name);
-        AssemblyWriter.appendCommandToCode("la", "$t0", firstOperandDes.name);
-        AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
-
-        AssemblyWriter.appendCommandToCode("++", "$t0", "$t0", "0x1");
-        AssemblyWriter.appendCommandToData(variableName, "word", "0");
-        AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
-        AssemblyWriter.appendDebugLine(variableName);
-        semanticStack.push(new LocalVarDscp(variableName,  Type.INTEGER_NUMBER));
-    }
-
-    // Comments
-    // case "plusPlus":
-    // firstOperand = (Descriptor) SemanticStack.pop();
-    // new PlusPlus(firstOperand).compile();
-    // System.out.println("code gen of plus plus");
-    // break;
-    /* ----------------------------- End: Operations ---------------------------- */
-
-
 
     public void ReadInt() {
         AssemblyWriter.appendComment("read integer");
