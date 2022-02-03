@@ -11,4 +11,8 @@ public enum Type {
     WHITESPACE,
     UNDEFINED,
     ESCAPE_CHAR,
+    // new ones:
+    DOUBLE_ARRAY,
+    STRING_ARRAY,
+    INT_ARRAY,
 }

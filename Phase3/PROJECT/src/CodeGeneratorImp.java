@@ -157,6 +157,13 @@ public class CodeGeneratorImp implements CodeGenerator {
                 case "CompleteElse":
                     completeElse();
                     break;
+
+                case "Return":
+                    returnStatement();
+                    break;
+                case "ArrayAccess":
+                    arrayAccess();
+                    break;
             }
 
 
@@ -165,6 +172,61 @@ public class CodeGeneratorImp implements CodeGenerator {
 
         }
     }
+
+    public void returnStatement(){
+        Descriptor fooValue =  (Descriptor) semanticStack.pop();
+        AssemblyWriter.addLabel(Computations.afterCompareLabel);
+        AssemblyWriter.appendCommandToCode("li", "$t0", "1");
+        AssemblyWriter.appendCommandToCode("sw", "$t0", Computations.variableNameOfContinue);
+        AssemblyWriter.appendCommandToCode("b", Computations.continueLabel);
+        AssemblyWriter.appendComment("return " + fooValue.name);
+        AssemblyWriter.appendCommandToCode("li", "$v0", "10");
+        AssemblyWriter.appendCommandToCode("la", "$t0", fooValue.name);
+        AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
+        AssemblyWriter.appendCommandToCode("move", "$a0", "$t0");
+        AssemblyWriter.appendCommandToCode("syscall");
+    }
+    /* ------------------------------ Begin: Array ------------------------------ */
+    // TODO: We need to test this section.
+    public Descriptor index = null;
+    public Descriptor arrName = null;
+    public void arrayAccess(){
+        index = (Descriptor) semanticStack.pop();
+        arrName = (Descriptor) semanticStack.pop();
+        AssemblyWriter.appendComment("array access with name " + arrName.name + " at " + index.getValue());
+        AssemblyWriter.appendCommandToCode("la", "$t0", arrName.name);
+        AssemblyWriter.appendCommandToCode("li", "$t4", "4");
+        AssemblyWriter.appendCommandToCode("li", "$t1", String.valueOf(index.getValue()));
+        AssemblyWriter.appendCommandToCode("mul", "$t1", "$t1", "$t4");
+        AssemblyWriter.appendCommandToCode("add", "$t0", "$t0", "$t1");
+        AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
+        LocalVarDscp lvd = new LocalVarDscp(GenerateVariable(), changeArrayTypeToElementType(arrName.type));
+        AssemblyWriter.appendCommandToData(lvd.name, "word", "0");
+        semanticStack.push(lvd);
+        AssemblyWriter.appendCommandToCode("sw", "$t0", lvd.name);
+    }
+    /* ------------------------------- End: Array ------------------------------- */
+
+    /*
+    public void pushInt(){
+        int fooIntValue = 0; //TODO: Change this to scanner.intValue later on.
+        System.out.println(fooIntValue);
+        Descriptor descriptor = (Descriptor) GlobalSymbolTable.getSymbolTable().getDescriptor("$" + fooIntValue);
+        boolean hasDescriptor = descriptor != null;
+        if (!hasDescriptor) {
+            String variableName = GenerateVariable();
+            descriptor = new GlobalVariableDescriptor(variableName, Type.INTEGER_NUMBER);
+            descriptor.setValue(String.valueOf(fooIntValue));
+            AssemblyWriter.appendComment("integer constant");
+            AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(fooIntValue));
+            AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
+            GlobalSymbolTable.getSymbolTable().addDescriptor("$" + fooIntValue, descriptor);
+            AssemblyWriter.appendCommandToData(variableName, "word", "0");
+            AssemblyWriter.appendDebugLine(variableName);
+        }
+        semanticStack.push(descriptor);
+    }
+    */
 
     /* --------------------------- Begin: If Statement -------------------------- */
     // Containers
@@ -197,19 +259,6 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.deleteLabel(afterElseLabel);
         AssemblyWriter.addLabel(afterElseLabel);
     }
-    // Comments
-    // case "if":
-    //     new If((Descriptor) SemanticStack.pop()).compile();
-    //     break;
-    // case "completeIf":
-    //     If.completeIf();
-    //     break;
-    // case "else":
-    //     If.elseCode();
-    //     break;
-    // case "completeElse":
-    //     If.completeElse();
-    //     break;
     /* ---------------------------- End: If Statement --------------------------- */
 
     /* ---------------------------- Begin: While Loop --------------------------- */
@@ -668,13 +717,30 @@ public class CodeGeneratorImp implements CodeGenerator {
 
 
 
-
+    // shitty methods will go here
     public static String GenerateVariable(){
         variableCount++;
         return "var" + (variableCount);
     }
 
-    // shitty methods will go here
+    Type changeArrayTypeToElementType(Type arrType) {
+        Type res;
+        switch (arrType) {
+            case DOUBLE_ARRAY:
+                res = Type.REAL_NUMBER;
+                break;
+            case INT_ARRAY:
+                res = Type.INTEGER_NUMBER;
+                break;
+            case STRING_ARRAY:
+                res = Type.STRING;
+                break;
+            default:
+                res = null;
+        }
+        return res;
+    }
+
     private static int labelIndex = 0;
     public static String generateNewLabel() {
         ++labelIndex;
