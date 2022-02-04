@@ -21,11 +21,9 @@ class Main {
 	a += b ;
 	c *= d;
 	b = (real)a;
-	
 	}
 
 }
 
-id.id
 
 

@@ -11,10 +11,10 @@ package com.compiler;
 %type Token
 
 %{
-    //public int ICV = 0;
-    //public float RCV = 0.0f;
-    // public boolean BCV = false;    // may be used in next phase
-    //public String SVC = "";
+    public int ICV = 0;
+    public float RCV = 0.0f;
+    public boolean BCV = false;   
+    public String SVC = "";
     private StringBuffer string  = new StringBuffer();
     public String stringValue = "";
     private Token token(String token, Type type) {
@@ -128,7 +128,7 @@ OperatorsAndPunctuation = {add} | {unaryminus} | {production} |  {division} | {a
 
 
 
-//Bolean    not exactly mentioned but we think it may necessary for next phase
+//Boolean    not exactly mentioned but we think it may necessary for next phase
 Boolean = {True}| {False}
 // States
 %state STRING
@@ -140,6 +140,13 @@ Boolean = {True}| {False}
         string.append(yytext());
          yybegin(STRING);
     }
+
+    {Boolean} {
+        String absoluteStringValue = yytext();
+        BCV = Boolean.parseBoolean(absoluteStringValue);
+        return token(absoluteStringValue,Type.Boolean);
+    }
+
     {Comment} {
         return token(yytext(), Type.COMMENT);
     }
@@ -153,20 +160,23 @@ Boolean = {True}| {False}
         return token(yytext(), Type.IDENTIFIERS);
     }
     {DecimalInteger} {
-        //ICV = Integer.valueOf(yytext());
+        ICV = Integer.valueOf(yytext());
         return token(yytext(), Type.INTEGER_NUMBER);
     }
     {RealNumber} {
-        //RCV = Float.valueOf(yytext() + "f");
+        RCV = Float.valueOf(yytext() + "f");
         return token(yytext(), Type.REAL_NUMBER);
     }
     {HexaDecimal} {
-        //String absoluteStringValue = yytext().substring(yytext().indexOf("0") + 2);
-        //ICV = Integer.parseInt(absoluteStringValue, 16);
+        String absoluteStringValue = yytext().substring(yytext().indexOf("0") + 2);
+        char firstChar = yytext().charAt(0);
+        String stringToParse = (firstChar == '-') ? firstChar + absoluteStringValue : absoluteStringValue;
+        ICV = Integer.parseInt(stringToParse, 16);
         return token(yytext(), Type.HEX);
+
     }
     {ScientificNotation} {
-        //RCV = Float.valueOf(yytext() + "f");
+        RCV = Float.valueOf(yytext() + "f");
         return token(yytext(), Type.SCIENTIFIC_NOTATION);
     }
     {WhiteSpace} {
@@ -180,6 +190,7 @@ Boolean = {True}| {False}
 
 <STRING> {
    {stringliteral}  {
+
                         string.append(yytext());
                         stringValue = string.toString();
                         string = new StringBuffer();

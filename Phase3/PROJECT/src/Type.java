@@ -7,6 +7,7 @@ public enum Type {
     INTEGER_NUMBER,
     REAL_NUMBER,
     HEX,
+    Boolean,
     SCIENTIFIC_NOTATION,
     WHITESPACE,
     UNDEFINED,
