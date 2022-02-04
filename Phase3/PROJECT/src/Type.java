@@ -13,7 +13,7 @@ public enum Type {
     UNDEFINED,
     ESCAPE_CHAR,
     // new ones:
-    DOUBLE_ARRAY,
+    REAL_ARRAY,
     STRING_ARRAY,
     INT_ARRAY,
 }

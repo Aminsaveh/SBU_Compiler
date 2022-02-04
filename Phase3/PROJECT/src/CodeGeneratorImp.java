@@ -1,5 +1,7 @@
 
 
+import java.util.Arrays;
+import java.util.Scanner;
 import java.util.Stack;
 
 public class CodeGeneratorImp implements CodeGenerator {
@@ -162,7 +164,28 @@ public class CodeGeneratorImp implements CodeGenerator {
                     returnStatement();
                     break;
                 case "ArrayAccess":
-                    arrayAccess();
+                    ArrayAccess();
+                    break;
+                case "pushInt":
+                    PushInt();
+                    break;
+                case "pushReal":
+                    PushReal();
+                    break;
+                case "pushStr":
+                    PushStr();
+                    break;
+                case "TrueConst":
+                    TrueConst();
+                    break;
+                case "FalseConst":
+                    FalseConst();
+                    break;
+                case "popPushArrayType":
+                    PopPushArrayType();
+                    break;
+                case "SetArrayDscp":
+                    SetArrayDscp();
                     break;
             }
 
@@ -188,12 +211,13 @@ public class CodeGeneratorImp implements CodeGenerator {
     }
     /* ------------------------------ Begin: Array ------------------------------ */
     // TODO: We need to test this section.
-    public Descriptor index = null;
-    public Descriptor arrName = null;
-    public void arrayAccess(){
-        index = (Descriptor) semanticStack.pop();
-        arrName = (Descriptor) semanticStack.pop();
-        AssemblyWriter.appendComment("array access with name " + arrName.name + " at " + index.getValue());
+
+    public void ArrayAccess(){
+        System.out.println("ArrayAccess");
+        Descriptor index = (Descriptor) semanticStack.pop();
+        Descriptor arrName = (Descriptor) semanticStack.pop();
+        System.out.println("Array access with name " + arrName.name + " at " + index.getValue());
+        AssemblyWriter.appendComment("Array access with name " + arrName.name + " at " + index.getValue());
         AssemblyWriter.appendCommandToCode("la", "$t0", arrName.name);
         AssemblyWriter.appendCommandToCode("li", "$t4", "4");
         AssemblyWriter.appendCommandToCode("li", "$t1", String.valueOf(index.getValue()));
@@ -209,7 +233,7 @@ public class CodeGeneratorImp implements CodeGenerator {
 
     /*
     public void pushInt(){
-        int fooIntValue = 0; //TODO: Change this to scanner.intValue later on.
+        int fooIntValue = 0;
         System.out.println(fooIntValue);
         Descriptor descriptor = (Descriptor) GlobalSymbolTable.getSymbolTable().getDescriptor("$" + fooIntValue);
         boolean hasDescriptor = descriptor != null;
@@ -226,7 +250,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         }
         semanticStack.push(descriptor);
     }
-    */
+     */
 
     /* --------------------------- Begin: If Statement -------------------------- */
     // Containers
@@ -417,18 +441,37 @@ public class CodeGeneratorImp implements CodeGenerator {
     public void AddGlobalId(){
         String id = (String) semanticStack.pop();
         Type type = (Type) semanticStack.pop();
-        System.out.println("AddGlobalId :" + id + " " + type);
-        SymbolTable top = symbolTableGlobalStack.pop();
-        top.symbolTable.put(id,new LocalVarDscp(id,type));
-        symbolTableGlobalStack.push(top);
+        if(type.toString().contains("ARRAY")) {
+            System.out.println("GlobalArray :" + id + " " + type);
+            SymbolTable top = symbolTableGlobalStack.pop();
+            if (!top.symbolTable.containsKey(id)) {
+                top.symbolTable.put(id, new ArrayDescriptor(id, type, true));
+                symbolTableGlobalStack.push(top);
+            }
+        }else {
+            System.out.println("AddGlobalId :" + id + " " + type);
+            SymbolTable top = symbolTableGlobalStack.pop();
+            top.symbolTable.put(id, new LocalVarDscp(id, type));
+            symbolTableGlobalStack.push(top);
+        }
     }
     public void AddLocalId(){
         String id = (String) semanticStack.pop();
         Type type = (Type) semanticStack.pop();
-        System.out.println("AddLocalId :" + id + " " + type);
-        SymbolTable top = symbolTableLocalStack.pop();
-        top.symbolTable.put(id,new LocalVarDscp(id,type));
-        symbolTableLocalStack.push(top);
+        if(type.toString().contains("ARRAY")){
+            System.out.println("LocalArray :" + id + " " + type);
+            SymbolTable top = symbolTableLocalStack.pop();
+            if(!top.symbolTable.containsKey(id)){
+                top.symbolTable.put(id,  new ArrayDescriptor(id,type,true));
+               symbolTableLocalStack.push(top);
+            }
+        }else{
+            System.out.println("AddLocalId :" + id + " " + type);
+            SymbolTable top = symbolTableLocalStack.pop();
+            top.symbolTable.put(id,new LocalVarDscp(id,type));
+            symbolTableLocalStack.push(top);
+        }
+
     }
 
     public void PushId(String id){
@@ -448,7 +491,11 @@ public class CodeGeneratorImp implements CodeGenerator {
             if(top.symbolTable.containsKey(id)){
                 isLocal=true;
                 System.out.println("GlobalVar Pushed" );
-                semanticStack.push(top.symbolTable.get(id));
+                System.out.println(top.symbolTable.get(id).name);
+                String name = top.symbolTable.get(id).name;
+                Descriptor temp = top.symbolTable.get(id);
+                temp.name = name;
+                semanticStack.push(temp);
             }
             symbolTableGlobalStack.push(top);
         }
@@ -470,6 +517,8 @@ public class CodeGeneratorImp implements CodeGenerator {
 
 
     public void Assignment(){
+        System.out.println("Assignment ");
+        System.out.println(semanticStack.size());
         Descriptor rightSide = (Descriptor) semanticStack.pop();
         Descriptor leftSide = (Descriptor) semanticStack.pop();
         System.out.println("Assignment " + leftSide.name + " = " + rightSide.name);
@@ -480,10 +529,10 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToCode("sw", "$t1", "0($t0)");
         AssemblyWriter.appendDebugLine(leftSide.name);
         /*
-        if (TypeChecker.isArrayType(des.getType())) {
+        if (leftSide.type.toString().contains("ARRAY")) {
             int index = Integer.parseInt(((VariableDescriptor) rightSide).getValue());
             AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(index));
-            AssemblyWriter.appendCommandToCode("la", "$t1", des.getName());
+            AssemblyWriter.appendCommandToCode("la", "$t1", leftSide.name);
             AssemblyWriter.appendCommandToCode("li", "$t4", String.valueOf(4)); //TODO: convert 4 to size of
             AssemblyWriter.appendCommandToCode("mul", "$t0", "$t0", "$t4");
             AssemblyWriter.appendCommandToCode("add", "$t1", "$t1", "$t0");
@@ -512,6 +561,8 @@ public class CodeGeneratorImp implements CodeGenerator {
         Type res;
         switch (type) {
             case "bool":
+                res = Type.Boolean;
+                break;
             case "int":
                 res = Type.INTEGER_NUMBER;
                 break;
@@ -713,6 +764,183 @@ public class CodeGeneratorImp implements CodeGenerator {
         System.out.println("IntToReal");
     }
 
+    public void PushInt(){
+        System.out.println("PushInt");
+        System.out.println(scanner.ICV);
+        SymbolTable Top = symbolTableGlobalStack.pop();
+        if(!Top.symbolTable.containsKey("$" + scanner.ICV)){
+                String variableName = GenerateVariable();
+                Descriptor descriptor = new LocalVarDscp(variableName, Type.INTEGER_NUMBER);
+                descriptor.setValue(String.valueOf(scanner.ICV));
+                AssemblyWriter.appendComment("integer constant");
+                AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(scanner.ICV));
+                AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
+                Top.symbolTable.put("$" + scanner.ICV, descriptor);
+                AssemblyWriter.appendCommandToData(variableName, "word", "0");
+                AssemblyWriter.appendDebugLine(variableName);
+                semanticStack.push(descriptor);
+                symbolTableGlobalStack.push(Top);
+            }
+        else
+            {
+                semanticStack.push((Descriptor)Top.symbolTable.get("$" + scanner.ICV));
+                symbolTableGlobalStack.push(Top);
+            }
+        System.out.println("PushInt");
+    }
+    public void PushReal(){
+        System.out.println("PushReal");
+        System.out.println(scanner.RCV);
+        SymbolTable Top = symbolTableGlobalStack.pop();
+        if(!Top.symbolTable.containsKey("$" + scanner.RCV)){
+
+            String variableName = GenerateVariable();
+            Descriptor descriptor = new LocalVarDscp(variableName, Type.REAL_NUMBER);
+            descriptor.setValue(String.valueOf(scanner.RCV));
+            AssemblyWriter.appendComment("Real constant");
+            AssemblyWriter.appendCommandToCode("li.s", "$f0", String.valueOf(scanner.RCV));
+            AssemblyWriter.appendCommandToCode("s.s", "$f0", variableName);
+            Top.symbolTable.put("$" + scanner.RCV, descriptor);
+            AssemblyWriter.appendCommandToData(variableName, "word", "0");
+            AssemblyWriter.appendDebugLine(variableName);
+            semanticStack.push(descriptor);
+            symbolTableGlobalStack.push(Top);
+        }
+        else
+        {
+            semanticStack.push((Descriptor)Top.symbolTable.get("$" + scanner.RCV));
+            symbolTableGlobalStack.push(Top);
+        }
+        System.out.println("PushReal");
+    }
+
+
+    public void PushStr(){
+        System.out.println("PushStr");
+        System.out.println(scanner.stringValue);
+        SymbolTable Top = symbolTableGlobalStack.pop();
+        if(!Top.symbolTable.containsKey("$$" + scanner.stringValue)){
+
+            String variableName = GenerateVariable();
+            Descriptor descriptor = new LocalVarDscp(variableName, Type.STRING);
+            descriptor.setValue(String.valueOf(scanner.stringValue));
+            AssemblyWriter.appendComment("string constant");
+            AssemblyWriter.appendCommandToData(variableName, "asciiz",  scanner.stringValue);
+            Top.symbolTable.put("$$" + scanner.stringValue, descriptor);
+            AssemblyWriter.appendDebugLine(variableName);
+            semanticStack.push(descriptor);
+            symbolTableGlobalStack.push(Top);
+        }
+        else
+        {
+            semanticStack.push((Descriptor)Top.symbolTable.get("$$" + scanner.stringValue));
+            symbolTableGlobalStack.push(Top);
+        }
+        System.out.println("PushStr");
+    }
+
+    public void TrueConst(){
+        System.out.println("TrueConst");
+        System.out.println(1);
+        SymbolTable Top = symbolTableGlobalStack.pop();
+        if(!Top.symbolTable.containsKey("$" + 1)){
+
+            String variableName = GenerateVariable();
+            Descriptor descriptor = new LocalVarDscp(variableName, Type.INTEGER_NUMBER);
+            descriptor.setValue(String.valueOf(1));
+            AssemblyWriter.appendComment("Boolean constant");
+            AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(1));
+            AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
+            Top.symbolTable.put("$" + 1, descriptor);
+            AssemblyWriter.appendCommandToData(variableName, "word", "0");
+            AssemblyWriter.appendDebugLine(variableName);
+            semanticStack.push(descriptor);
+            symbolTableGlobalStack.push(Top);
+        }
+        else
+        {
+            semanticStack.push((Descriptor)Top.symbolTable.get("$" + 1));
+            symbolTableGlobalStack.push(Top);
+        }
+        System.out.println("TrueConst");
+    }
+
+    public void FalseConst(){
+        System.out.println("FalseConst");
+        System.out.println(0);
+        SymbolTable Top = symbolTableGlobalStack.pop();
+        if(!Top.symbolTable.containsKey("$" + 0)){
+
+            String variableName = GenerateVariable();
+            Descriptor descriptor = new LocalVarDscp(variableName, Type.INTEGER_NUMBER);
+            descriptor.setValue(String.valueOf(0));
+            AssemblyWriter.appendComment("Boolean constant");
+            AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(0));
+            AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
+            Top.symbolTable.put("$" + 0, descriptor);
+            AssemblyWriter.appendCommandToData(variableName, "word", "0");
+            AssemblyWriter.appendDebugLine(variableName);
+            semanticStack.push(descriptor);
+            symbolTableGlobalStack.push(Top);
+        }
+        else
+        {
+            semanticStack.push((Descriptor)Top.symbolTable.get("$" + 0));
+            symbolTableGlobalStack.push(Top);
+        }
+        System.out.println("FalseConst");
+    }
+    public void PopPushArrayType(){
+        System.out.println("PopPushArrayType");
+        Type type = (Type)semanticStack.pop();
+        Type resType = null;
+        switch (type) {
+            case INTEGER_NUMBER:
+                resType = Type.INT_ARRAY;
+                break;
+            case REAL_NUMBER:
+                resType = Type.REAL_ARRAY;
+                break;
+            case STRING:
+                resType = Type.STRING_ARRAY;
+                break;
+        }
+        System.out.println(resType);
+        semanticStack.push(resType);
+    }
+
+    public void SetArrayDscp(){
+        System.out.println("SetArrayDscp");
+        System.out.println("SetArrayDscp");
+        Descriptor sizeDescriptor = (Descriptor) semanticStack.pop();
+        System.out.println(sizeDescriptor.name);
+        Type newArrayType = (Type) semanticStack.pop();
+        System.out.println(newArrayType.toString());
+        ArrayDescriptor nameOfArrayDes = (ArrayDescriptor) semanticStack.pop();
+        System.out.println(nameOfArrayDes.name);
+        nameOfArrayDes.size = Integer.parseInt(sizeDescriptor.getValue());
+        /*
+        if (nameOfArrayDes.getIsLocal()) {
+            DescriptorChecker.checkContainsDescriptor(nameOfArrayDes);
+        } else {
+            DescriptorChecker.checkContainsDescriptorGlobal(nameOfArrayDes);
+        }
+
+         */
+        //TypeChecker.checkArrayType(nameOfArrayDes.getType(), newArrayType);
+        if (nameOfArrayDes.isLocal) {
+            SymbolTable top = symbolTableLocalStack.pop();
+            top.symbolTable.put(nameOfArrayDes.name, nameOfArrayDes);
+            symbolTableLocalStack.push(top);
+        } else {
+            SymbolTable top = symbolTableGlobalStack.pop();
+            top.symbolTable.put(nameOfArrayDes.name, nameOfArrayDes);
+            symbolTableGlobalStack.push(top);
+        }
+        System.out.println(nameOfArrayDes.name + sizeDescriptor.getValue());
+        AssemblyWriter.appendCommandToData(nameOfArrayDes.name, "space", String.valueOf(4 * Integer.parseInt(sizeDescriptor.getValue())));
+    }
+
 
 
 
@@ -726,7 +954,7 @@ public class CodeGeneratorImp implements CodeGenerator {
     Type changeArrayTypeToElementType(Type arrType) {
         Type res;
         switch (arrType) {
-            case DOUBLE_ARRAY:
+            case REAL_ARRAY:
                 res = Type.REAL_NUMBER;
                 break;
             case INT_ARRAY:
@@ -735,6 +963,7 @@ public class CodeGeneratorImp implements CodeGenerator {
             case STRING_ARRAY:
                 res = Type.STRING;
                 break;
+
             default:
                 res = null;
         }

@@ -17,8 +17,8 @@ public class Main {
         }
     }
     public static void main(String[] args) throws IOException {
-        String inputCoolFilePath = "./test.cool";
-        String tablePath = "./table.npt";
+        String inputCoolFilePath = "E:/Cool Compiler/Phase3/PROJECT/src/test.cool";
+        String tablePath = "E:/Cool Compiler/Phase3/PROJECT/src/table.npt";
         /*
         if (args.length >= 6) {
             for (int i = 0; i < args.length; i++) {
@@ -33,7 +33,7 @@ public class Main {
                 }
             }
          */
-            AssemblyWriter write = new AssemblyWriter("../");
+            AssemblyWriter write = new AssemblyWriter("E:/Cool Compiler/Phase3/PROJECT/src/");
             CoolScanner scanner = new CoolScanner(new FileReader(inputCoolFilePath));
             CodeGeneratorImp cg = new CodeGeneratorImp(scanner);
             Parser parser = new Parser(scanner, cg, tablePath);
