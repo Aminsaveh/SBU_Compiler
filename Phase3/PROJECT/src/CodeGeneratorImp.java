@@ -1,15 +1,17 @@
 
 
-import java.util.Arrays;
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.*;
 
 public class CodeGeneratorImp implements CodeGenerator {
     public static Stack<Object> semanticStack = new Stack<>();
     public static Stack<SymbolTable> symbolTableLocalStack = new Stack<>();
     public static Stack<SymbolTable> symbolTableGlobalStack = new Stack<>();
+    public static List<String>  classes = new ArrayList<>();
     public static int variableCount = 0;
+    public static List<Integer>  errors = new ArrayList<>();
     public CoolScanner scanner;
+    public boolean isPlusPlusAfter = false;
+    public boolean isMinusMinusAfter = false;
     CodeGeneratorImp(CoolScanner scanner){
         this.scanner = scanner;
     }
@@ -42,13 +44,13 @@ public class CodeGeneratorImp implements CodeGenerator {
                     PushGlobalTopType();
                     break;
                 case "AddGlobalId":
-                    AddGlobalId();
+                    AddGlobalId("/$$",Type.INTEGER_NUMBER);
                     break;
                 case "pushLocalTopType":
                     PushLocalTopType();
                     break;
                 case "AddLocalid":
-                    AddLocalId();
+                    AddLocalId("/$$",Type.INTEGER_NUMBER);
                     break;
                 case "Assignment":
                     Assignment();
@@ -107,10 +109,22 @@ public class CodeGeneratorImp implements CodeGenerator {
                     DivideComputation();
                     break;
                 case "PlusPlus":
-                    PlusPlusComputation();
+                    PlusPlusBeforeComputation();
                     break;
                 case "MinusMinus":
-                    MinusMinusComputation();
+                    MinusMinusBeforeComputation();
+                    break;
+                case "PlusPlusAfter":
+                    PlusPlusAfterComputation();
+                    break;
+                case "MinusMinusAfter":
+                    MinusMinusAfterComputation();
+                    break;
+                case "Add1Assign":
+                    Add1Assign();
+                    break;
+                case "Sub1Assign":
+                    Sub1Assign();
                     break;
                 case "AddAssign" :
                     AddAssignComputation();
@@ -142,13 +156,13 @@ public class CodeGeneratorImp implements CodeGenerator {
                     startWhileCondition();
                     break;
                 case "WhileJumpZero":
-                    compileWhile();
+                    StartWhile();
                     break;
                 case "CompleteWhile":
                     completeWhile();
                     break;
                 case "If":
-                    compileIf();
+                    StartIf();
                     break;
                 case "CompleteIf":
                     completeIf();
@@ -187,12 +201,21 @@ public class CodeGeneratorImp implements CodeGenerator {
                 case "SetArrayDscp":
                     SetArrayDscp();
                     break;
+                case "getLen":
+                    GetLen();
+                    break;
+                case "unreachable":
+                    Unreachable();
+                    break;
+                case "pushClassProperty":
+                    PushClassProperty();
+                    break;
             }
 
 
         } catch (Exception e) {
 
-
+            CodeGeneratorImp.errors.add(scanner.yyline);
         }
     }
 
@@ -210,7 +233,6 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToCode("syscall");
     }
     /* ------------------------------ Begin: Array ------------------------------ */
-    // TODO: We need to test this section.
 
     public void ArrayAccess(){
         System.out.println("ArrayAccess");
@@ -231,26 +253,7 @@ public class CodeGeneratorImp implements CodeGenerator {
     }
     /* ------------------------------- End: Array ------------------------------- */
 
-    /*
-    public void pushInt(){
-        int fooIntValue = 0;
-        System.out.println(fooIntValue);
-        Descriptor descriptor = (Descriptor) GlobalSymbolTable.getSymbolTable().getDescriptor("$" + fooIntValue);
-        boolean hasDescriptor = descriptor != null;
-        if (!hasDescriptor) {
-            String variableName = GenerateVariable();
-            descriptor = new GlobalVariableDescriptor(variableName, Type.INTEGER_NUMBER);
-            descriptor.setValue(String.valueOf(fooIntValue));
-            AssemblyWriter.appendComment("integer constant");
-            AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(fooIntValue));
-            AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
-            GlobalSymbolTable.getSymbolTable().addDescriptor("$" + fooIntValue, descriptor);
-            AssemblyWriter.appendCommandToData(variableName, "word", "0");
-            AssemblyWriter.appendDebugLine(variableName);
-        }
-        semanticStack.push(descriptor);
-    }
-     */
+
 
     /* --------------------------- Begin: If Statement -------------------------- */
     // Containers
@@ -258,28 +261,28 @@ public class CodeGeneratorImp implements CodeGenerator {
     public static String afterElseLabel;
 
     // Methods
-    public void compileIf() {
+    public void StartIf() {
         Descriptor fooValueDescriptor = (Descriptor) semanticStack.pop();
         afterIfLabel = generateNewLabel();
         afterElseLabel = generateNewLabel();
-        AssemblyWriter.appendComment("if code for " + fooValueDescriptor);
+        AssemblyWriter.appendComment("Start If" + fooValueDescriptor);
         AssemblyWriter.appendCommandToCode("la", "$t0", fooValueDescriptor.name);
         AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t0)");
         AssemblyWriter.appendCommandToCode("beqz", "$t1", afterIfLabel);
     }
     public static void completeIf() {
-        AssemblyWriter.appendComment("complete if code");
+        AssemblyWriter.appendComment("completeIf");
         AssemblyWriter.appendCommandToCode("j", afterElseLabel);
         AssemblyWriter.addLabel(afterIfLabel);
         AssemblyWriter.addLabel(afterElseLabel);
     }
     public static void elseCode() {
-        AssemblyWriter.appendComment("else code");
+        AssemblyWriter.appendComment("elseCode");
         AssemblyWriter.deleteLabel(afterIfLabel);
         AssemblyWriter.addLabel(afterIfLabel);
     }
     public static void completeElse() {
-        AssemblyWriter.appendComment("complete else code");
+        AssemblyWriter.appendComment("completeElse");
         AssemblyWriter.deleteLabel(afterElseLabel);
         AssemblyWriter.addLabel(afterElseLabel);
     }
@@ -292,9 +295,9 @@ public class CodeGeneratorImp implements CodeGenerator {
     public static String endOfWhileLabel;
 
     // Methods
-    public void compileWhile() {
+    public void StartWhile() {
         Descriptor fooValueDescriptor = (Descriptor) semanticStack.pop();
-        AssemblyWriter.appendComment("while code for " + fooValueDescriptor);
+        AssemblyWriter.appendComment("StartWhile  " + fooValueDescriptor);
         AssemblyWriter.appendCommandToCode("la", "$t0", fooValueDescriptor.name);
         AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t0)");
         endOfWhileLabel = generateNewLabel();
@@ -302,12 +305,12 @@ public class CodeGeneratorImp implements CodeGenerator {
     }
     public static void startWhileCondition() {
         startOfConditionLabel = generateNewLabel();
-        AssemblyWriter.appendComment("start condition of while");
+        AssemblyWriter.appendComment("startWhileCondition");
         AssemblyWriter.addLabel(startOfConditionLabel);
     }
 
     public static void completeWhile() {
-        AssemblyWriter.appendComment("end of while");
+        AssemblyWriter.appendComment("completeWhile");
         AssemblyWriter.appendCommandToCode("j", startOfConditionLabel);
         AssemblyWriter.addLabel(endOfWhileLabel);
     }
@@ -322,7 +325,7 @@ public class CodeGeneratorImp implements CodeGenerator {
     // Methods
     public void compileFor() {
         Descriptor fooDescriptor = (Descriptor) semanticStack.pop();
-        AssemblyWriter.appendComment("FOR code for " + fooDescriptor);
+        AssemblyWriter.appendComment("For for " + fooDescriptor);
         AssemblyWriter.appendCommandToCode("la", "$t0", fooDescriptor.name);
         AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t0)");
         endOfForLabel = generateNewLabel();
@@ -331,18 +334,18 @@ public class CodeGeneratorImp implements CodeGenerator {
 
     public static void startForCondition() {
         startOfForConditionLabel = generateNewLabel();
-        AssemblyWriter.appendComment("start condition of for");
+        AssemblyWriter.appendComment("startForCondition");
         AssemblyWriter.addLabel(startOfForConditionLabel);
     }
 
     public static void completeFor() {
         startOfStepLabel = generateNewLabel();
-        AssemblyWriter.appendComment("end of FOR");
+        AssemblyWriter.appendComment("completeFor");
         AssemblyWriter.appendCommandToCode("j", startOfStepLabel);
     }
 
     public static void stepForStatement() {
-        AssemblyWriter.appendComment("step of FOR");
+        AssemblyWriter.appendComment("stepForStatement");
         AssemblyWriter.addLabel(startOfStepLabel);
     }
 
@@ -353,8 +356,9 @@ public class CodeGeneratorImp implements CodeGenerator {
     }
     /* ------------------------------ End: For Loop ----------------------------- */
 
+
     public void ReadInt() {
-        AssemblyWriter.appendComment("read integer");
+        AssemblyWriter.appendComment("Read Int");
         AssemblyWriter.appendCommandToCode("li", "$v0", "5");
         AssemblyWriter.appendCommandToCode("syscall");
         AssemblyWriter.appendCommandToCode("move", "$t0", "$v0");
@@ -362,13 +366,12 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToData(variableName, "word", "0");
         AssemblyWriter.appendCommandToCode("la", "$t1", variableName);
         AssemblyWriter.appendCommandToCode("sw", "$t0", "0($t1)");
-        AssemblyWriter.appendDebugLine(variableName);
         System.out.println("Read Integer : " + variableName);
         semanticStack.push(new LocalVarDscp(variableName, Type.INTEGER_NUMBER));
     }
 
     public void ReadStr() {
-        AssemblyWriter.appendComment("read string");
+        AssemblyWriter.appendComment("Read String");
         AssemblyWriter.appendCommandToCode("li", "$v0", "8");
         AssemblyWriter.appendCommandToCode("la", "$a0", "strbuffer");
         AssemblyWriter.appendCommandToCode("li", "$a1", "20");
@@ -382,16 +385,28 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToCode("syscall");
     }
 
-
     public void Print(Descriptor var){
         boolean isInteger = var.type == Type.INTEGER_NUMBER;
-        boolean isFloat = var.type == Type.REAL_NUMBER;
-        String outputType = isInteger ? "1" : isFloat ? "2" : "4";
-        String comment = isInteger ? "integer" : isFloat ? "float" : "string";
-        AssemblyWriter.appendComment("print" + " " + comment + " (" + var.name + ")");
+        boolean isReal = var.type == Type.REAL_NUMBER;
+        boolean isString = var.type == Type.STRING;
+        String outputType="";
+        String comment ="";
+        if(isReal){
+            outputType = "2";
+            comment = "Real";
+        }
+        if(isInteger){
+            outputType = "1";
+            comment = "Integer";
+        }
+        if(isString){
+            outputType = "4";
+            comment = "String";
+        }
+        AssemblyWriter.appendComment("Print" + " " + comment + " (" + var.name + ")");
         AssemblyWriter.appendCommandToCode("li", "$v0", outputType);
         AssemblyWriter.appendCommandToCode("la", "$t0", var.name);
-        if (isFloat) {
+        if (isReal) {
             AssemblyWriter.appendCommandToCode("l.s", "$f0", "0($t0)");
             AssemblyWriter.appendCommandToCode("mov.s", "$f12", "$f0");
         } else {
@@ -399,13 +414,12 @@ public class CodeGeneratorImp implements CodeGenerator {
             AssemblyWriter.appendCommandToCode("move", "$a0", "$t0");
         }
         AssemblyWriter.appendCommandToCode("syscall");
-        if (isFloat || isInteger) {
+        if (isReal || isInteger) {
             AssemblyWriter.appendComment("new line");
             AssemblyWriter.appendCommandToCode("li", "$v0", "4");
             AssemblyWriter.appendCommandToCode("la", "$a0", "nl");
             AssemblyWriter.appendCommandToCode("syscall");
         }
-
         System.out.println("Print : " + var.name);
     }
 
@@ -416,92 +430,144 @@ public class CodeGeneratorImp implements CodeGenerator {
     }
 
     public void PushClassId(String classId){
-        symbolTableGlobalStack.push(new SymbolTable(classId));
-        System.out.println("PushClassId : " + classId);
+        try {
+            symbolTableGlobalStack.push(new SymbolTable(classId));
+            if (classes.contains(classId)) {
+                throw new DscpExistError(classId, scanner.yyline);
+            }
+            classes.add(classId);
+            System.out.println("PushClassId : " + classId);
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 
     public void PushGlobalTopType(){
         String id = (String) semanticStack.pop();
         Type type = (Type) semanticStack.pop();
-        SymbolTable top = symbolTableGlobalStack.pop();
-        top.symbolTable.put(id,new LocalVarDscp(id,type));
-        symbolTableGlobalStack.push(top);
+        AddGlobalId(id,type);
         semanticStack.push(type);
     }
 
     public void PushLocalTopType(){
         String id = (String) semanticStack.pop();
         Type type = (Type) semanticStack.pop();
-        SymbolTable top = symbolTableLocalStack.pop();
-        top.symbolTable.put(id,new LocalVarDscp(id,type));
-        symbolTableLocalStack.push(top);
+        AddLocalId(id,type);
         semanticStack.push(type);
     }
 
-    public void AddGlobalId(){
-        String id = (String) semanticStack.pop();
-        Type type = (Type) semanticStack.pop();
-        if(type.toString().contains("ARRAY")) {
-            System.out.println("GlobalArray :" + id + " " + type);
-            SymbolTable top = symbolTableGlobalStack.pop();
-            if (!top.symbolTable.containsKey(id)) {
-                top.symbolTable.put(id, new ArrayDescriptor(id, type, true));
-                symbolTableGlobalStack.push(top);
+    public void AddGlobalId(String _id,Type _type){
+        try {
+            String id;
+            Type type;
+            if (_id.contains("/$$")) {
+                id = (String) semanticStack.pop();
+                type = (Type) semanticStack.pop();
+            } else {
+                id = _id;
+                type = _type;
             }
-        }else {
-            System.out.println("AddGlobalId :" + id + " " + type);
-            SymbolTable top = symbolTableGlobalStack.pop();
-            top.symbolTable.put(id, new LocalVarDscp(id, type));
-            symbolTableGlobalStack.push(top);
+            SymbolTable table = symbolTableGlobalStack.pop();
+            if (type.toString().contains("ARRAY")) {
+                if (table.symbolTable.containsKey(id) && table.symbolTable.get(id).type.toString().contains("ARRAY")) {
+                    symbolTableGlobalStack.push(table);
+                    throw new DscpExistError(id, scanner.yyline);
+                } else {
+                    System.out.println("GlobalArray :" + id + " " + type);
+                    table.symbolTable.put(id, new ArrayDescriptor(id, type, true));
+                    symbolTableGlobalStack.push(table);
+                }
+            } else {
+                if (table.symbolTable.containsKey(id) && !table.symbolTable.get(id).type.toString().contains("ARRAY")) {
+                    symbolTableGlobalStack.push(table);
+                    throw new DscpExistError(id, scanner.yyline);
+                } else {
+                    System.out.println("AddGlobalId :" + id + " " + type);
+                    table.symbolTable.put(id, new LocalVarDscp(id, type));
+                    symbolTableGlobalStack.push(table);
+                }
+            }
+        }catch (Exception e){
+            CodeGeneratorImp.errors.add(scanner.yyline);
+                System.out.println(e.getMessage());
         }
     }
-    public void AddLocalId(){
-        String id = (String) semanticStack.pop();
-        Type type = (Type) semanticStack.pop();
-        if(type.toString().contains("ARRAY")){
-            System.out.println("LocalArray :" + id + " " + type);
-            SymbolTable top = symbolTableLocalStack.pop();
-            if(!top.symbolTable.containsKey(id)){
-                top.symbolTable.put(id,  new ArrayDescriptor(id,type,true));
-               symbolTableLocalStack.push(top);
-            }
-        }else{
-            System.out.println("AddLocalId :" + id + " " + type);
-            SymbolTable top = symbolTableLocalStack.pop();
-            top.symbolTable.put(id,new LocalVarDscp(id,type));
-            symbolTableLocalStack.push(top);
-        }
 
+    public void AddLocalId(String _id,Type _type){
+        try {
+            String id;
+            Type type;
+            if(_id.contains("NOT")) {
+                id = (String) semanticStack.pop();
+                type = (Type) semanticStack.pop();
+            }else{
+                id = _id;
+                type = _type;
+            }
+            SymbolTable table = symbolTableLocalStack.pop();
+            if (type.toString().contains("ARRAY")) {
+                if (table.symbolTable.containsKey(id) && table.symbolTable.get(id).type.toString().contains("ARRAY")) {
+                    symbolTableLocalStack.push(table);
+                    throw new DscpExistError(id, scanner.yyline);
+                } else {
+                    System.out.println("LocalArray :" + id + " " + type);
+                    table.symbolTable.put(id, new ArrayDescriptor(id, type, true));
+                    symbolTableLocalStack.push(table);
+                }
+            } else {
+                if (table.symbolTable.containsKey(id) && !table.symbolTable.get(id).type.toString().contains("ARRAY")) {
+                    symbolTableLocalStack.push(table);
+                    throw new DscpExistError(id, scanner.yyline);
+                } else {
+                    System.out.println("AddLocalId :" + id + " " + type);
+                    table.symbolTable.put(id, new LocalVarDscp(id, type));
+                    symbolTableLocalStack.push(table);
+                }
+            }
+
+        }catch (Exception e){
+            CodeGeneratorImp.errors.add(scanner.yyline);
+            System.out.println(e.getMessage());
+        }
     }
 
     public void PushId(String id){
-        System.out.println("PushId : " + id);
-        boolean isLocal = false;
-        if(!symbolTableLocalStack.isEmpty()) {
-            SymbolTable symbolTable = symbolTableLocalStack.pop();
-            if (symbolTable.symbolTable.containsKey(id)) {
-                isLocal = true;
-                System.out.println("LocalVar Pushed");
-                semanticStack.push(symbolTable.symbolTable.get(id));
+        try {
+            System.out.println("PushId : " + id);
+            boolean isLocal = false;
+            if (!symbolTableLocalStack.isEmpty()) {
+                SymbolTable symbolTable = symbolTableLocalStack.pop();
+                if (symbolTable.symbolTable.containsKey(id)) {
+                    isLocal = true;
+                    System.out.println("LocalVar Pushed");
+                    semanticStack.push(symbolTable.symbolTable.get(id));
+                }
+                symbolTableLocalStack.push(symbolTable);
             }
-            symbolTableLocalStack.push(symbolTable);
-        }
-        if(!isLocal &&!symbolTableGlobalStack.isEmpty()){
-            SymbolTable top = symbolTableGlobalStack.pop();
-            if(top.symbolTable.containsKey(id)){
-                isLocal=true;
-                System.out.println("GlobalVar Pushed" );
-                System.out.println(top.symbolTable.get(id).name);
-                String name = top.symbolTable.get(id).name;
-                Descriptor temp = top.symbolTable.get(id);
-                temp.name = name;
-                semanticStack.push(temp);
+            if (!isLocal && !symbolTableGlobalStack.isEmpty()) {
+                SymbolTable top = symbolTableGlobalStack.pop();
+                if (top.symbolTable.containsKey(id)) {
+                    isLocal = true;
+                    System.out.println("GlobalVar Pushed");
+                    System.out.println(top.symbolTable.get(id).name);
+                    String name = top.symbolTable.get(id).name;
+                    Descriptor temp = top.symbolTable.get(id);
+                    temp.name = name;
+                    semanticStack.push(temp);
+                }
+                symbolTableGlobalStack.push(top);
             }
-            symbolTableGlobalStack.push(top);
-        }
 
-        if(!isLocal){
-            //todo error
+            if (!isLocal) {
+                if(classes.contains(id)){
+                    semanticStack.push(id);
+                }else {
+                    throw new NotFoundDscpError(id, scanner.yyline);
+                }
+            }
+        }catch (Exception e){
+            CodeGeneratorImp.errors.add(scanner.yyline);
+            System.out.println(e.getMessage());
         }
 
     }
@@ -517,45 +583,54 @@ public class CodeGeneratorImp implements CodeGenerator {
 
 
     public void Assignment(){
-        System.out.println("Assignment ");
-        System.out.println(semanticStack.size());
-        Descriptor rightSide = (Descriptor) semanticStack.pop();
-        Descriptor leftSide = (Descriptor) semanticStack.pop();
-        System.out.println("Assignment " + leftSide.name + " = " + rightSide.name);
-        AssemblyWriter.appendComment("assignment " + leftSide.name + " = " + rightSide.name);
-        AssemblyWriter.appendCommandToCode("la", "$t0", leftSide.name);
-        AssemblyWriter.appendCommandToCode("la", "$t1", rightSide.name);
-        AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t1)");
-        AssemblyWriter.appendCommandToCode("sw", "$t1", "0($t0)");
-        AssemblyWriter.appendDebugLine(leftSide.name);
-        /*
-        if (leftSide.type.toString().contains("ARRAY")) {
-            int index = Integer.parseInt(((VariableDescriptor) rightSide).getValue());
-            AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(index));
-            AssemblyWriter.appendCommandToCode("la", "$t1", leftSide.name);
-            AssemblyWriter.appendCommandToCode("li", "$t4", String.valueOf(4)); //TODO: convert 4 to size of
-            AssemblyWriter.appendCommandToCode("mul", "$t0", "$t0", "$t4");
-            AssemblyWriter.appendCommandToCode("add", "$t1", "$t1", "$t0");
-            AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t1)");
-            Descriptor leftSide = (Descriptor) SemanticStack.pop();
-            AssemblyWriter.appendCommandToCode("sw", "$t1", leftSide.getName());
-            AssemblyWriter.appendDebugLine(leftSide.getName());
-        } else {
-            Descriptor leftSide = (Descriptor) des;
-            AssemblyWriter.appendComment("assignment " + leftSide.getName() + " = " + rightSide.getName());
-            AssemblyWriter.appendCommandToCode("la", "$t0", leftSide.getName());
-            AssemblyWriter.appendCommandToCode("la", "$t1", rightSide.getName());
-            AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t1)");
-            AssemblyWriter.appendCommandToCode("sw", "$t1", "0($t0)");
-            AssemblyWriter.appendDebugLine(leftSide.getName());
+        try {
+            System.out.println("Assignment ");
+            Descriptor rightSide = (Descriptor) semanticStack.pop();
+            if(isPlusPlusAfter||isMinusMinusAfter){
+                System.out.println("AfterPlusMinus");
+                Descriptor rightRightSide = (Descriptor) semanticStack.pop();
+            }
+            Descriptor leftSide = (Descriptor) semanticStack.pop();
+            System.out.println("Assignment " + leftSide.name + " = " + rightSide.name);
+            if(leftSide.type == rightSide.type) {
+                AssemblyWriter.appendComment("Assignment " + leftSide.name + "Type : " + leftSide.type + " = " + rightSide.name + "Type" + rightSide.type);
+                AssemblyWriter.appendCommandToCode("la", "$t0", leftSide.name);
+                AssemblyWriter.appendCommandToCode("la", "$t1", rightSide.name);
+                AssemblyWriter.appendCommandToCode("lw", "$t1", "0($t1)");
+                AssemblyWriter.appendCommandToCode("sw", "$t1", "0($t0)");
+                if(isPlusPlusAfter || isMinusMinusAfter) {
+                    semanticStack.push(rightSide);
+                    if(isPlusPlusAfter){
+                        scanner.ICV = 1;
+                        PushInt();
+                    }else{
+                        scanner.ICV = -1;
+                        PushInt();
+                    }
+                    isPlusPlusAfter=false;
+                    isMinusMinusAfter=false;
+                    semanticStack.push(rightSide);
+                    AddComputation();
+                    Assignment();
+                }
+            }else{
+                errors.add(scanner.yyline);
+                throw new TypeError("Assignment",leftSide.type,rightSide.type,scanner.yyline);
+            }
+        }catch (Exception e){
+            isPlusPlusAfter=false;
+            isMinusMinusAfter=false;
+            CodeGeneratorImp.errors.add(scanner.yyline);
+            System.out.println(e.getMessage());
         }
-         */
     }
+
 
     public void PushMethod(String methodId){
         symbolTableLocalStack.push(new SymbolTable(methodId));
         System.out.println("PushMethod : " + methodId);
     }
+
 
     Type StringToType(String type) {
         Type res;
@@ -583,109 +658,137 @@ public class CodeGeneratorImp implements CodeGenerator {
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("OR Computation");
-        Computations.Operate(firstOperand,secondOperand,"OR");
+        Computations.Operate(firstOperand,secondOperand,"OR",scanner.yyline);
     }
 
     public void XORComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("XOR Computation");
-        Computations.Operate(firstOperand,secondOperand,"XOR");
+        Computations.Operate(firstOperand,secondOperand,"XOR",scanner.yyline);
     }
 
     public void ANDComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("AND Computation");
-        Computations.Operate(firstOperand,secondOperand,"AND");
+        Computations.Operate(firstOperand,secondOperand,"AND",scanner.yyline);
     }
 
     public void BiggerComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Bigger Computation");
-        Computations.Operate(firstOperand,secondOperand,"Bigger");
+        Computations.Operate(firstOperand,secondOperand,"Bigger",scanner.yyline);
     }
 
     public void SmallerComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Smaller Computation");
-        Computations.Operate(firstOperand,secondOperand,"Smaller");
+        Computations.Operate(firstOperand,secondOperand,"Smaller",scanner.yyline);
     }
 
     public void SmallerEqualComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("SmallerEqual Computation");
-        Computations.Operate(firstOperand,secondOperand,"SmallerEqual");
+        Computations.Operate(firstOperand,secondOperand,"SmallerEqual",scanner.yyline);
     }
 
     public void BiggerEqualComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("BiggerEqual Computation");
-        Computations.Operate(firstOperand,secondOperand,"BiggerEqual");
+        Computations.Operate(firstOperand,secondOperand,"BiggerEqual",scanner.yyline);
     }
 
     public void EqualComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Equal Computation");
-        Computations.Operate(firstOperand,secondOperand,"Equal");
+        Computations.Operate(firstOperand,secondOperand,"Equal",scanner.yyline);
     }
 
     public void NotEqualComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("NotEqual Computation");
-        Computations.Operate(firstOperand,secondOperand,"NotEqual");
+        Computations.Operate(firstOperand,secondOperand,"NotEqual",scanner.yyline);
     }
 
     public void NOTComputation(){
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Not Computation");
-        Computations.Operate(firstOperand,firstOperand,"NOT");
+        Computations.Operate(firstOperand,firstOperand,"NOT",scanner.yyline);
     }
 
-    public void PlusPlusComputation(){
+    public void PlusPlusBeforeComputation(){
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
-        System.out.println("PlusPlus Computation");
-        Computations.Operate(firstOperand,firstOperand,"PlusPlus");
+        System.out.println("PlusPlusBefore Computation");
+        Computations.Operate(firstOperand,firstOperand,"PlusPlusBefore",scanner.yyline);
+    }
+    public void PlusPlusAfterComputation(){
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("PlusPlusBefore Computation");
+        Computations.Operate(firstOperand,firstOperand,"PlusPlus",scanner.yyline);
+        isPlusPlusAfter = true;
+        semanticStack.push(firstOperand);
     }
 
-    public void MinusMinusComputation(){
+    public void MinusMinusBeforeComputation(){
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
-        System.out.println("MinusMinus Computation");
-        Computations.Operate(firstOperand,firstOperand,"MinusMinus");
+        System.out.println("MinusMinusAfter Computation");
+        Computations.Operate(firstOperand,firstOperand,"MinusMinusBefore",scanner.yyline);
+    }
+    public void MinusMinusAfterComputation(){
+        Descriptor firstOperand = (Descriptor) semanticStack.pop();
+        System.out.println("MinusMinusAfter Computation");
+        Computations.Operate(firstOperand,firstOperand,"MinusMinus",scanner.yyline);
+        isMinusMinusAfter = true;
+        semanticStack.push(firstOperand);
+    }
+
+    public void Add1Assign(){
+        scanner.ICV = 1;
+        PushInt();
+        AddAssignComputation();
+        System.out.println("Add1Assign");
+    }
+
+    public void Sub1Assign(){
+        scanner.ICV = -1;
+        PushInt();
+        AddAssignComputation();
+        System.out.println("Sub1Assign");
     }
 
     public void AddComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Add Computation");
-        Computations.Operate(firstOperand,secondOperand,"Add");
+        Computations.Operate(firstOperand,secondOperand,"Add",scanner.yyline);
     }
 
     public void SubComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Sub Computation");
-        Computations.Operate(firstOperand,secondOperand,"Sub");
+        Computations.Operate(firstOperand,secondOperand,"Sub",scanner.yyline);
     }
 
     public void MultComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Mult Computation");
-        Computations.Operate(firstOperand,secondOperand,"Mult");
+        Computations.Operate(firstOperand,secondOperand,"Mult",scanner.yyline);
     }
 
     public void DivideComputation(){
         Descriptor secondOperand = (Descriptor) semanticStack.pop();
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         System.out.println("Divide Computation");
-        Computations.Operate(firstOperand,secondOperand,"Divide");
+        Computations.Operate(firstOperand,secondOperand,"Divide",scanner.yyline);
     }
 
     public void AddAssignComputation(){
@@ -693,7 +796,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         semanticStack.push(firstOperand);
         System.out.println("AddAssign Computation");
-        Computations.Operate(firstOperand,secondOperand,"Add");
+        Computations.Operate(firstOperand,secondOperand,"Add",scanner.yyline);
         Assignment();
     }
     public void SubAssignComputation(){
@@ -701,7 +804,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         semanticStack.push(firstOperand);
         System.out.println("SubAssign Computation");
-        Computations.Operate(firstOperand,secondOperand,"Sub");
+        Computations.Operate(firstOperand,secondOperand,"Sub",scanner.yyline);
         Assignment();
     }
     public void MultAssignComputation(){
@@ -709,7 +812,7 @@ public class CodeGeneratorImp implements CodeGenerator {
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         semanticStack.push(firstOperand);
         System.out.println("MultAssign Computation");
-        Computations.Operate(firstOperand,secondOperand,"Mult");
+        Computations.Operate(firstOperand,secondOperand,"Mult",scanner.yyline);
         Assignment();
     }
     public void DivideAssignComputation(){
@@ -717,49 +820,46 @@ public class CodeGeneratorImp implements CodeGenerator {
         Descriptor firstOperand = (Descriptor) semanticStack.pop();
         semanticStack.push(firstOperand);
         System.out.println("DivideAssign Computation");
-        Computations.Operate(firstOperand,secondOperand,"Divide");
+        Computations.Operate(firstOperand,secondOperand,"Divide",scanner.yyline);
         Assignment();
     }
 
+
     public void Cast(){
-        Descriptor des = (Descriptor) semanticStack.pop();
-        Type type = (Type) semanticStack.pop();
-        if (type == Type.INTEGER_NUMBER) {
-            RealToInt(des, type);
-        } else if (type == Type.REAL_NUMBER) {
-            IntToReal(des, type);
-        } else {
-            String srcType = des.type.toString();
-            String destType = type.toString();
-            //new CastError(srcType, destType).error();
+        try {
+            Descriptor des = (Descriptor) semanticStack.pop();
+            Type type = (Type) semanticStack.pop();
+            if (type == Type.INTEGER_NUMBER && des.type == Type.REAL_NUMBER) {
+                RealToInt(des, type);
+            } else if (type == Type.REAL_NUMBER && des.type == Type.INTEGER_NUMBER) {
+                IntToReal(des, type);
+            } else {
+                throw new CastError(des.type, type, scanner.yyline);
+            }
+        }catch (Exception e){
+            CodeGeneratorImp.errors.add(scanner.yyline);
+            System.out.println(e.getMessage());
         }
     }
 
-
-
-
     public void RealToInt(Descriptor firstOperandDes, Type resultType){
-        AssemblyWriter.appendComment("binary " + "Convert" + " expression of " + firstOperandDes.name);
+        AssemblyWriter.appendComment("RealToInt" + firstOperandDes.name);
         AssemblyWriter.appendCommandToCode("la", "$t0", firstOperandDes.name);
         AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
         AssemblyWriter.appendCommandToCode("mtc1", "$t0", "$f0");
         AssemblyWriter.appendCommandToCode("cvt.w.s", "$f1", "$f0");
-//        AssemblyFileWriter.appendCommandToData(firstOperandDes.getName(), "word", "0");
         AssemblyWriter.appendCommandToCode("s.s", "$f1", firstOperandDes.name);
-//        AssemblyFileWriter.appendDebugLine(firstOperandDes.getName());
         semanticStack.push(new LocalVarDscp(firstOperandDes.name, resultType));
         System.out.println("RealToInt");
     }
 
     public void IntToReal(Descriptor firstOperandDes, Type resultType){
-        AssemblyWriter.appendComment("binary " + "Convert" + " expression of " + firstOperandDes.name);
+        AssemblyWriter.appendComment("IntToReal" + firstOperandDes.name);
         AssemblyWriter.appendCommandToCode("la", "$t0", firstOperandDes.name);
         AssemblyWriter.appendCommandToCode("lw", "$t0", "0($t0)");
         AssemblyWriter.appendCommandToCode("mtc1", "$t0", "$f0");
         AssemblyWriter.appendCommandToCode("cvt.s.w", "$f1", "$f0");
-//        AssemblyFileWriter.appendCommandToData(firstOperandDes.getName(), "word", "0");
         AssemblyWriter.appendCommandToCode("s.s", "$f1", firstOperandDes.name);
-//        AssemblyFileWriter.appendDebugLine(firstOperandDes.getName());
         semanticStack.push(new LocalVarDscp(firstOperandDes.name, resultType));
         System.out.println("IntToReal");
     }
@@ -772,12 +872,11 @@ public class CodeGeneratorImp implements CodeGenerator {
                 String variableName = GenerateVariable();
                 Descriptor descriptor = new LocalVarDscp(variableName, Type.INTEGER_NUMBER);
                 descriptor.setValue(String.valueOf(scanner.ICV));
-                AssemblyWriter.appendComment("integer constant");
+                AssemblyWriter.appendComment("ICV");
                 AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(scanner.ICV));
                 AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
                 Top.symbolTable.put("$" + scanner.ICV, descriptor);
                 AssemblyWriter.appendCommandToData(variableName, "word", "0");
-                AssemblyWriter.appendDebugLine(variableName);
                 semanticStack.push(descriptor);
                 symbolTableGlobalStack.push(Top);
             }
@@ -797,12 +896,11 @@ public class CodeGeneratorImp implements CodeGenerator {
             String variableName = GenerateVariable();
             Descriptor descriptor = new LocalVarDscp(variableName, Type.REAL_NUMBER);
             descriptor.setValue(String.valueOf(scanner.RCV));
-            AssemblyWriter.appendComment("Real constant");
+            AssemblyWriter.appendComment("RCV");
             AssemblyWriter.appendCommandToCode("li.s", "$f0", String.valueOf(scanner.RCV));
             AssemblyWriter.appendCommandToCode("s.s", "$f0", variableName);
             Top.symbolTable.put("$" + scanner.RCV, descriptor);
             AssemblyWriter.appendCommandToData(variableName, "word", "0");
-            AssemblyWriter.appendDebugLine(variableName);
             semanticStack.push(descriptor);
             symbolTableGlobalStack.push(Top);
         }
@@ -824,10 +922,9 @@ public class CodeGeneratorImp implements CodeGenerator {
             String variableName = GenerateVariable();
             Descriptor descriptor = new LocalVarDscp(variableName, Type.STRING);
             descriptor.setValue(String.valueOf(scanner.stringValue));
-            AssemblyWriter.appendComment("string constant");
+            AssemblyWriter.appendComment("SCV");
             AssemblyWriter.appendCommandToData(variableName, "asciiz",  scanner.stringValue);
             Top.symbolTable.put("$$" + scanner.stringValue, descriptor);
-            AssemblyWriter.appendDebugLine(variableName);
             semanticStack.push(descriptor);
             symbolTableGlobalStack.push(Top);
         }
@@ -838,7 +935,6 @@ public class CodeGeneratorImp implements CodeGenerator {
         }
         System.out.println("PushStr");
     }
-
     public void TrueConst(){
         System.out.println("TrueConst");
         System.out.println(1);
@@ -848,12 +944,11 @@ public class CodeGeneratorImp implements CodeGenerator {
             String variableName = GenerateVariable();
             Descriptor descriptor = new LocalVarDscp(variableName, Type.INTEGER_NUMBER);
             descriptor.setValue(String.valueOf(1));
-            AssemblyWriter.appendComment("Boolean constant");
+            AssemblyWriter.appendComment("BCV");
             AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(1));
             AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
             Top.symbolTable.put("$" + 1, descriptor);
             AssemblyWriter.appendCommandToData(variableName, "word", "0");
-            AssemblyWriter.appendDebugLine(variableName);
             semanticStack.push(descriptor);
             symbolTableGlobalStack.push(Top);
         }
@@ -864,7 +959,6 @@ public class CodeGeneratorImp implements CodeGenerator {
         }
         System.out.println("TrueConst");
     }
-
     public void FalseConst(){
         System.out.println("FalseConst");
         System.out.println(0);
@@ -874,12 +968,11 @@ public class CodeGeneratorImp implements CodeGenerator {
             String variableName = GenerateVariable();
             Descriptor descriptor = new LocalVarDscp(variableName, Type.INTEGER_NUMBER);
             descriptor.setValue(String.valueOf(0));
-            AssemblyWriter.appendComment("Boolean constant");
+            AssemblyWriter.appendComment("BCV");
             AssemblyWriter.appendCommandToCode("li", "$t0", String.valueOf(0));
             AssemblyWriter.appendCommandToCode("sw", "$t0", variableName);
             Top.symbolTable.put("$" + 0, descriptor);
             AssemblyWriter.appendCommandToData(variableName, "word", "0");
-            AssemblyWriter.appendDebugLine(variableName);
             semanticStack.push(descriptor);
             symbolTableGlobalStack.push(Top);
         }
@@ -919,15 +1012,6 @@ public class CodeGeneratorImp implements CodeGenerator {
         ArrayDescriptor nameOfArrayDes = (ArrayDescriptor) semanticStack.pop();
         System.out.println(nameOfArrayDes.name);
         nameOfArrayDes.size = Integer.parseInt(sizeDescriptor.getValue());
-        /*
-        if (nameOfArrayDes.getIsLocal()) {
-            DescriptorChecker.checkContainsDescriptor(nameOfArrayDes);
-        } else {
-            DescriptorChecker.checkContainsDescriptorGlobal(nameOfArrayDes);
-        }
-
-         */
-        //TypeChecker.checkArrayType(nameOfArrayDes.getType(), newArrayType);
         if (nameOfArrayDes.isLocal) {
             SymbolTable top = symbolTableLocalStack.pop();
             top.symbolTable.put(nameOfArrayDes.name, nameOfArrayDes);
@@ -941,16 +1025,62 @@ public class CodeGeneratorImp implements CodeGenerator {
         AssemblyWriter.appendCommandToData(nameOfArrayDes.name, "space", String.valueOf(4 * Integer.parseInt(sizeDescriptor.getValue())));
     }
 
+    public void GetLen(){
+        try {
+            Descriptor descriptor = (Descriptor) semanticStack.pop();
+            if(descriptor instanceof  ArrayDescriptor){
+                scanner.ICV = ((ArrayDescriptor) descriptor).size;
+                PushInt();
+                System.out.println("GetLen : " + ((ArrayDescriptor) descriptor).size);
+            }else{
+                throw new TypeError("GetLen",Type.INT_ARRAY,descriptor.type, scanner.yyline);
+            }
+        } catch (Exception e) {
+            errors.add(scanner.yyline);
+            System.out.println(e.getMessage());
+        }
+    }
+    public void Unreachable(){
+        System.out.println("Unreachable");
+        AssemblyWriter.appendComment("Unreachable Code");
+    }
+
+    public void PushClassProperty(){
+        try {
+            String classId = (String) semanticStack.pop();
+            String propertyId = scanner.currentSymbol.getToken();
+            Stack<SymbolTable> temp;
+            boolean found = false;
+            temp = (Stack<SymbolTable>) symbolTableGlobalStack.clone();
+            while (!temp.isEmpty()) {
+                SymbolTable tmp = temp.pop();
+                if (tmp.scopeName.contains(classId)) {
+                    found = true;
+                    if (tmp.symbolTable.containsKey(propertyId)) {
+                        semanticStack.push(tmp.symbolTable.get(propertyId));
+                        break;
+                    } else {
+                        throw new NotFoundDscpError(propertyId, scanner.yyline);
+                    }
+                }
+            }
+            if (!found) {
+                throw new NotFoundDscpError(classId, scanner.yyline);
+            }
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        System.out.println("PushClassProperty");
+    }
 
 
 
 
-    // shitty methods will go here
+    // utils
     public static String GenerateVariable(){
         variableCount++;
         return "var" + (variableCount);
     }
-
     Type changeArrayTypeToElementType(Type arrType) {
         Type res;
         switch (arrType) {
@@ -963,13 +1093,11 @@ public class CodeGeneratorImp implements CodeGenerator {
             case STRING_ARRAY:
                 res = Type.STRING;
                 break;
-
             default:
                 res = null;
         }
         return res;
     }
-
     private static int labelIndex = 0;
     public static String generateNewLabel() {
         ++labelIndex;

@@ -1,3 +1,11 @@
+class hi{
+	let int a;
+
+
+}
+
+
+
 class Main {
 	let int [] vv;
 	let int a;
@@ -7,11 +15,17 @@ class Main {
 	let bool s;
 	let real z;
 	let real x;
-
+	
 
 	void main(){
+	hi2.b = a;
+	d = ++a;
+	c = a++;
+	l = 10;
+	break;
 	vv = new Array (int[] , 5);
-	a = 2;
+	b = len(vv);
+	a = 2.11;
 	vv[0] = a;
 	b = 2;
 	z = 3.14;

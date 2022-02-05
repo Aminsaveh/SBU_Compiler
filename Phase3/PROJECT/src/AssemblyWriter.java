@@ -7,21 +7,16 @@ import java.util.Arrays;
 public class AssemblyWriter {
     private String filePath;
     private static BufferedWriter writer;
-
     private static String OUTPUT_ASSEMBLY_FILE_NAME = "code.s";
     private static String TAB = "\t\t";
     private static String SPACE = " ";
     private static String NEW_LINE = "\n";
-
-
     private static String code = "";
     private static String data = "";
-
     public AssemblyWriter(String filePath) {
         this.filePath = filePath;
         createCompiledFile();
     }
-
     public static void appendCommandToCode(String command, String... operands) {
         CommandLine commandLine = new CommandLine(command, new ArrayList<>(Arrays.asList(operands)));
         code += (TAB + commandLine.getCommand());
@@ -30,35 +25,24 @@ public class AssemblyWriter {
             code += (SPACE + res + NEW_LINE);
         }
     }
-
     public static void appendComment(String comment) {
         appendCommandToCode("# " + comment);
     }
-
-    public static void appendDebugLine(String addressName) {
-        appendComment("t7 is just for debugging");
-        appendCommandToCode("lw", "$t7", addressName);
-    }
-
     public static void appendCommandToData(String name, String directive, String value) {
         DataLine dataLine = new DataLine(name, directive, value);
         data += (TAB + dataLine + NEW_LINE);
     }
-
     public static void addLabel(String name) {
         Label lbl = new Label(name);
         code += lbl.toString() + NEW_LINE;
     }
-
     public static void deleteLabel(String label) {
         code = code.replaceFirst(label + ":", "");
     }
-
     private void createCompiledFile() {
         try {
             writer = new BufferedWriter(new FileWriter(filePath + OUTPUT_ASSEMBLY_FILE_NAME));
             code += ".text" + NEW_LINE;
-            //TODO check if input file has main
             code += ".globl main" + NEW_LINE;
             code += "main:" + NEW_LINE;
             data += ".data" + NEW_LINE;
@@ -70,7 +54,6 @@ public class AssemblyWriter {
             e.printStackTrace();
         }
     }
-
     public void writeOutputFile() {
         try {
             writer.write(code);
@@ -82,12 +65,4 @@ public class AssemblyWriter {
         }
     }
 
-    public void close() {
-        try {
-            writer.close();
-        } catch (IOException e) {
-            System.err.println("Can not close output file");
-            e.printStackTrace();
-        }
-    }
 }
